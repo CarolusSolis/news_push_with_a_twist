@@ -17,7 +17,8 @@ def save_preferences(prefs: Dict[str, Any]) -> None:
 def get_default_preferences() -> Dict[str, Any]:
     """Return default user preferences."""
     return {
-        'topics': ['AI/Tech', 'History'],
+        'learn_about': 'AI advancements, startup trends, emerging technologies',
+        'fun_learning': 'historical mysteries, space exploration, interesting science facts',
         'mood': 'balanced',
         'time_budget': 'quick',
         'include_deep_dive': True,
@@ -28,12 +29,19 @@ def render_preferences_sidebar() -> Dict[str, Any]:
     """Render preferences in sidebar and return current preferences."""
     st.sidebar.header("🎛️ Your Digest Preferences")
     
-    # Topics selection
-    topic_options = ['AI/Tech', 'History', 'Politics', 'Science', 'Business']
-    topics = st.sidebar.multiselect(
-        "Topics you care about:",
-        topic_options,
-        default=load_preferences().get('topics', ['AI/Tech', 'History'])
+    # Natural language learning interests
+    learn_about = st.sidebar.text_area(
+        "What I'd like to learn about:",
+        value=load_preferences().get('learn_about', 'AI advancements, startup trends, emerging technologies'),
+        height=80,
+        help="Describe what you're curious about or want to stay informed on"
+    )
+    
+    fun_learning = st.sidebar.text_area(
+        "What I have fun learning about:",
+        value=load_preferences().get('fun_learning', 'historical mysteries, space exploration, interesting science facts'),
+        height=80,
+        help="Topics that spark your curiosity or bring you joy to discover"
     )
     
     # Mood selection
@@ -63,7 +71,8 @@ def render_preferences_sidebar() -> Dict[str, Any]:
     
     # Build preferences dict
     prefs = {
-        'topics': topics,
+        'learn_about': learn_about,
+        'fun_learning': fun_learning,
         'mood': mood,
         'time_budget': time_budget,
         'include_deep_dive': include_deep_dive,
