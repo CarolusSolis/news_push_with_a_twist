@@ -32,50 +32,59 @@ def render_section(section: Dict[str, Any]) -> None:
                 st.markdown(f"• {text}")
 
 def render_sections(sections: List[Dict[str, Any]]) -> None:
-    """Render all digest sections as a continuous stream with color coding."""
+    """Render all digest sections with titles and item descriptions."""
     if not sections:
         st.info("No sections to display. Generate your digest to get started!")
         return
     
     st.header("📰 Your Personalized Morning Digest")
     
-    # Flatten all items from all sections into a single stream
+    # Render each section with its title and items as descriptions
     for section in sections:
+        title = section.get('title', 'Untitled Section')
         kind = section.get('kind', 'need')
         items = section.get('items', [])
         
-        for item in items:
-            text = item.get('text', '')
-            url = item.get('url')
-            
-            if kind == "need":
-                # Serious content - red/orange background
+        # Section header with badge
+        badge_emoji = "📌" if kind == "need" else "✨"
+        badge_color = "#d32f2f" if kind == "need" else "#1976d2"
+        bg_color = "#ffebee" if kind == "need" else "#e3f2fd"
+        border_color = "#f44336" if kind == "need" else "#2196f3"
+        
+        # Create section container
+        st.markdown(f"""
+        <div style='background-color: {bg_color}; padding: 16px; border-radius: 10px; margin-bottom: 16px; border-left: 5px solid {border_color};'>
+            <h3 style='margin: 0 0 8px 0; color: {badge_color};'>
+                {badge_emoji} {title}
+            </h3>
+        """, unsafe_allow_html=True)
+        
+        # Render items as descriptions below the title
+        if items:
+            for i, item in enumerate(items):
+                text = item.get('text', '')
+                url = item.get('url')
+                
                 if url:
                     st.markdown(f"""
-                    <div style='background-color: #ffebee; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #f44336;'>
-                        <span style='color: #d32f2f; font-weight: 600;'>📌</span> <a href='{url}' style='color: #1976d2; text-decoration: none;'>{text}</a>
+                    <div style='margin: 8px 0; padding: 12px; background-color: rgba(255,255,255,0.8); border-radius: 6px; border-left: 3px solid {border_color};'>
+                        <div style='color: #333; line-height: 1.5; margin-bottom: 4px;'>{text}</div>
+                        <div style='margin-top: 6px;'>
+                            <a href='{url}' style='color: #1976d2; text-decoration: none; font-size: 0.9em; font-weight: 500;'>Read more →</a>
+                        </div>
                     </div>
                     """, unsafe_allow_html=True)
                 else:
                     st.markdown(f"""
-                    <div style='background-color: #ffebee; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #f44336;'>
-                        <span style='color: #d32f2f; font-weight: 600;'>📌</span> {text}
+                    <div style='margin: 8px 0; padding: 12px; background-color: rgba(255,255,255,0.8); border-radius: 6px; border-left: 3px solid {border_color};'>
+                        <div style='color: #333; line-height: 1.5;'>{text}</div>
                     </div>
                     """, unsafe_allow_html=True)
-            else:
-                # Fun content - blue/green background  
-                if url:
-                    st.markdown(f"""
-                    <div style='background-color: #e3f2fd; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #2196f3;'>
-                        <span style='color: #1976d2; font-weight: 600;'>✨</span> <a href='{url}' style='color: #1976d2; text-decoration: none;'>{text}</a>
-                    </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    st.markdown(f"""
-                    <div style='background-color: #e3f2fd; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #2196f3;'>
-                        <span style='color: #1976d2; font-weight: 600;'>✨</span> {text}
-                    </div>
-                    """, unsafe_allow_html=True)
+        else:
+            st.markdown("<div style='margin: 8px 0; color: #666; font-style: italic;'>No items in this section.</div>", unsafe_allow_html=True)
+        
+        # Close section container
+        st.markdown("</div>", unsafe_allow_html=True)
 
 def render_agent_log(log_entries: List[str]) -> None:
     """Render the agent thinking log."""

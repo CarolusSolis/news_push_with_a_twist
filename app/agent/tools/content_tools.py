@@ -58,8 +58,8 @@ def process_content_item(item: dict, item_type: str) -> dict:
         snippet = item.get('snippet', 'Important development in technology')
         url = item.get('url')
         
-        # Truncate and format for serious content
-        text = f"{title} - {snippet[:80]}..."
+        # Format as "Title - Description" for proper parsing
+        text = f"{title} - {snippet}"
         
         return {
             'text': text,
@@ -70,10 +70,12 @@ def process_content_item(item: dict, item_type: str) -> dict:
     
     else:  # fun content
         if 'text' in item and 'author' in item:
-            # Quote format
-            text = f'"{item["text"]}" - {item["author"]}'
+            # Quote format - use quote as title, author as description
+            title = f'"{item["text"]}"'
+            description = f"- {item['author']}"
+            text = f"{title} - {description}"
         else:
-            # History format  
+            # History format - use title and snippet
             title = item.get('title', 'Historical Event')
             snippet = item.get('snippet', 'Interesting historical fact')
             text = f"{title} - {snippet}"

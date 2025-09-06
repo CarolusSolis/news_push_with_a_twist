@@ -118,6 +118,12 @@ SECTION REQUIREMENTS:
 - Each section should have 2-4 items for comprehensive coverage
 - Mix tech/AI news (need) with quotes, fun facts, or interesting stories (nice)
 
+CONTENT STRUCTURE:
+- Use Hacker News article TITLES as your section titles (e.g., "OpenAI Releases GPT-5 with 10x Performance Improvements")
+- For each section, create 2-4 items where each item's text is a detailed description/explanation of what that headline means
+- Since Hacker News doesn't provide descriptions, generate sensible, informative descriptions for each headline
+- Make descriptions engaging and informative, explaining the significance and implications
+
 IMPORTANT: 
 - Only use live data. If a data source fails, log the error but do not fall back to mock data.
 - Be comprehensive and create a rich, balanced experience with real, current information.
@@ -309,15 +315,27 @@ def generate_mock_digest(preferences: Dict[str, Any], use_live_data: bool = Fals
             processed = process_content_item.invoke({"item": history_content['items'][0], "item_type": 'fun'})
             items_to_add.append(processed)
     
-    # Convert to sections format
+    # Convert to sections format with proper title/description structure
     sections = []
     for i, item in enumerate(items_to_add):
+        # Extract title and description from the processed item
+        # The item text should be in format "Title - Description" or just "Description"
+        item_text = item['text']
+        
+        # Try to split title and description, but if no dash, use the whole text as description
+        if ' - ' in item_text:
+            title, description = item_text.split(' - ', 1)
+        else:
+            # For items without clear title/description split, use a generic title
+            title = f"Tech Update {i+1}" if item['kind'] == 'need' else f"Interesting Fact {i+1}"
+            description = item_text
+        
         sections.append({
             'id': f'agent_item_{i+1}',
-            'title': f'Agent Item {i+1}',
+            'title': title.strip(),
             'kind': item['kind'],
             'items': [{
-                'text': item['text'],
+                'text': description.strip(),
                 'url': item.get('url')
             }]
         })

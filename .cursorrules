@@ -25,6 +25,7 @@ User Prefs → Agent System (Real/Mock) → Structured Output → Presenter.rend
 - **Structured Output**: Pydantic schemas with tool calling
 - **Retrieval**: requests + BeautifulSoup for web scraping
 - **Storage**: In-memory / JSON file for prefs + cached content
+- **Audio**: TTS (Text-to-Speech) for AI voiceover (planned)
 - **Python**: 3.11+ with type hints
 
 ## Section Contract
@@ -32,9 +33,9 @@ Each section is a dict:
 ```python
 {
   "id": "quick_hits" | "deep_dive" | "did_you_know" | "fun_spark" | "quote",
-  "title": "📌 Quick Hits You Should Know",
+  "title": "📌 OpenAI Releases GPT-5 with 10x Performance Improvements",
   "kind": "need" | "nice",
-  "items": [{"text": "...", "url": optional}]
+  "items": [{"text": "The new model shows significant advances in reasoning, coding, and multimodal capabilities while reducing compute costs.", "url": optional}]
 }
 ```
 
@@ -49,11 +50,12 @@ Each section is a dict:
 - **Structured Output**: Use Pydantic schemas with tool calling, avoid custom parsing
 
 ## Agent Architecture
-- **Real Agent**: Uses live data sources (Hacker News, etc.) with structured Pydantic output
+- **Real Agent**: Uses live data sources (currently Hacker News only) with structured Pydantic output
 - **Mock Agent**: Fallback agent using static/cached data for reliability
-- **Structured Output**: All agents return `DigestResponse` schema with sections and items
+- **Structured Output**: All agents return `DigestResponse` schema with exactly 10 sections
 - **Tool Integration**: LangChain tools for data retrieval and content processing
 - **Fallback Chain**: Real Agent → Mock Agent → Static Samples
+- **Current Live Tools**: `scrape_hacker_news` (more tools planned for future releases)
 
 ## Fallback Strategy
 Always implement: **Live Data → Static Samples**
@@ -64,27 +66,53 @@ Always implement: **Live Data → Static Samples**
 ## Agentic Workflow Rules
 1. **Planning**: If topics include AI/History/Politics → select `quick_hits`, `deep_dive` (need)
 2. **Always include** one `nice` block (`quote` or `fun_spark`)
-3. **Interleave pattern**: need → nice → need (max 3–4 sections)
-4. **Log all decisions** to "Agent Thinking Log"
-5. **Observability**: Every step appends concise log: `[Planner] chose X`, `[Retriever] cache hit for HN`
+3. **Interleave pattern**: need → nice → need (10 sections)
+4. **Item Descriptions**: Use items' text as descriptions; for Hacker News items without descriptions, generate sensible AI placeholder descriptions
+5. **Log all decisions** to "Agent Thinking Log"
+6. **Observability**: Every step appends concise log: `[Planner] chose X`, `[Retriever] cache hit for HN`
 
-## Data Sources (3 primary)
-- **Hacker News** (front page) → "Quick Hits" tech/AI headlines  
-- **Wikipedia – Selected anniversaries** → "Did You Know" history bits  
-- **quotes.toscrape.com** → "Quote / Fun Spark"
+## Data Sources
+### Currently Implemented (Live Data)
+- **Hacker News** (front page) → "Quick Hits" tech/AI headlines (✅ LIVE)
+  - Note: Hacker News items don't have descriptions, so AI generates sensible placeholder descriptions
 
-## Implementation Priority
+### Planned for Future Implementation
+- **Wikipedia – Selected anniversaries** → "Did You Know" history bits (📋 PLANNED)
+- **quotes.toscrape.com** → "Quote / Fun Spark" (📋 PLANNED)
+- **Additional news sources** for broader coverage (📋 PLANNED)
+
+## Implementation Status
+### ✅ Completed
 1. **MVP Foundation**: app.py skeleton with sidebar prefs, Generate button, Agent Log expander
 2. **Agent System**: Real agent with live data + Mock agent fallback
 3. **Structured Output**: Pydantic schemas with tool calling for consistent parsing
-4. **Tool Integration**: LangChain tools for data retrieval (Hacker News, etc.)
+4. **Tool Integration**: LangChain tools for data retrieval (Hacker News implemented)
 5. **Presentation Layer**: Build presenter.render() with markdown cards and collapsible expanders
 6. **Static Data**: Create data/static_samples.json with sample content for fallback
+7. **10-Section Generation**: Real agent now generates exactly 10 sections with need/nice balance
+8. **User Agent Toggle**: UI control to switch between real and mock agents
+
+### 📋 Next Steps
+1. **AI Voiceover**: Add AI voiceover to the digest, speaking like a friendly morning digest host
+2. **Additional Live Data Sources**: Wikipedia anniversaries, quotes.toscrape.com
+3. **Enhanced Content Processing**: More sophisticated content analysis and categorization
+4. **User Preferences**: More granular control over content types and sources
+
+## Planned Features
+### 🎯 High Priority
+- **AI Voiceover**: TTS integration with friendly morning digest host persona for audio experience
+
+### 🔄 Medium Priority  
+- **Additional Data Sources**: Expand beyond Hacker News to include Wikipedia, quotes, and other news sources
+- **Enhanced Processing**: More sophisticated content analysis and categorization algorithms
+- **Advanced Preferences**: Granular user control over content types, sources, and presentation
 
 ## Demo Constraints
-- Must show: pick preferences → show "Agent plan" → interleaved sections (need/nice) → regenerate
+- Must show: pick preferences → show "Agent plan" → 10 interleaved sections (need/nice) → regenerate
 - Fast and reliable: prefer **cached/mocked** data if scraping/LLM is slow
 - 3-minute screen recording capability
+- Currently demonstrates: Hacker News live data → 10-section digest with agent thinking log
+- Future demo: Include AI voiceover as friendly morning digest host
 
 ## Non-Goals
 - Building auth, multi-user infrastructure
