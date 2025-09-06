@@ -2,13 +2,22 @@
 
 import os
 import json
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union
 from pathlib import Path
 import logging
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
 
 # LangGraph imports
 from langgraph.prebuilt import create_react_agent
 from langchain_openai import ChatOpenAI
+from langchain_core.tools import BaseTool
+
+# Pydantic for structured output
+from pydantic import BaseModel, Field
+from typing import List as TypingList
 
 # Import tools
 from .tools import (
@@ -20,8 +29,26 @@ from .tools import (
 
 logger = logging.getLogger(__name__)
 
+# Pydantic schemas for structured output
+class DigestItem(BaseModel):
+    """A single item in a digest section."""
+    text: str = Field(description="The main content text of the item")
+    url: str = Field(default="", description="Optional URL for the item")
+
+class DigestSection(BaseModel):
+    """A section in the morning digest."""
+    id: str = Field(description="Unique identifier for the section")
+    title: str = Field(description="Display title for the section")
+    kind: str = Field(description="Type of content: 'need' for need-to-know or 'nice' for nice-to-know")
+    items: TypingList[DigestItem] = Field(description="List of items in this section")
+
+class DigestResponse(BaseModel):
+    """The complete digest response from the agent."""
+    sections: TypingList[DigestSection] = Field(description="List of digest sections")
+    summary: str = Field(description="Brief summary of what was generated")
+
 # Initialize the LLM (will use OpenAI GPT by default)
-def get_llm() -> ChatOpenAI:
+def get_llm() -> Optional[ChatOpenAI]:
     """Get the configured LLM."""
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -29,7 +56,7 @@ def get_llm() -> ChatOpenAI:
         return None
     
     return ChatOpenAI(
-        model="gpt-4o-mini",
+        model="gpt-4o",
         temperature=0.2,
         api_key=api_key
     )
@@ -56,53 +83,167 @@ class AgentLogger:
 # Global logger instance
 agent_logger = AgentLogger()
 
-def create_digest_agent() -> Optional[Any]:
-    """Create the main digest planning agent using LangGraph."""
+
+def create_real_digest_agent() -> Optional[Any]:
+    """Create the real digest agent using LangGraph with live data only."""
     llm = get_llm()
     
     if llm is None:
-        agent_logger.log("[Agent] No OpenAI API key found - running in mock mode")
+        agent_logger.log("[Real Agent] No OpenAI API key found - cannot create real agent")
         return None
     
-    # Define the tools the agent can use
+    # Define the tools the real agent can use (LIVE DATA ONLY)
     tools = [
-        analyze_user_preferences,
-        fetch_content_by_type, 
-        process_content_item,
-        scrape_hacker_news
+        scrape_hacker_news,  # Only Hacker News for now, no mock data
+        DigestResponse  # Add the structured output schema as a tool
     ]
     
-    # Create the agent with a system prompt
-    system_prompt = """You are the Agentic Morning Digest Planner. Your job is to:
-
-1. Analyze user preferences to understand what they want to learn about
-2. Create a content strategy that alternates between serious (need-to-know) and fun (nice-to-know) items
-3. Fetch relevant content from available sources
-4. Process content items for presentation
-
-Always follow the alternating pattern: serious → fun → serious → fun.
-Be concise and focused on creating a personalized experience.
-Log your reasoning as you work through each step."""
-    
     try:
+        # First bind tools, then apply structured output (as per documentation)
+        model_with_tools = llm.bind_tools(tools)
+        
+        system_prompt = """You are the Real Agentic Morning Digest Planner. Your job is to:
+
+1. Use ONLY live data sources - no mock or cached data
+2. Fetch real content from Hacker News using the scrape_hacker_news tool
+3. Create a personalized digest based on user preferences
+4. Focus on tech/AI content from Hacker News
+5. Process and format the content for presentation
+6. ALWAYS use the DigestResponse tool to return your final structured response
+
+IMPORTANT: 
+- Only use live data. If a data source fails, log the error but do not fall back to mock data.
+- Be concise and focused on creating a personalized experience with real, current information.
+- ALWAYS call the DigestResponse tool at the end to return your structured digest."""
+        
         agent = create_react_agent(
-            model=llm,
+            model=model_with_tools,
             tools=tools,
             prompt=system_prompt
         )
         
-        agent_logger.log("[Agent] Created LangGraph ReAct agent with content planning tools")
+        agent_logger.log("[Real Agent] Created LangGraph ReAct agent with live data tools")
         return agent
     except Exception as e:
-        agent_logger.log(f"[Agent] Error creating agent: {e}")
+        agent_logger.log(f"[Real Agent] Error creating agent: {e}")
         return None
 
-def generate_digest_with_agent(preferences: Dict[str, Any], use_live_data: bool = False) -> List[Dict[str, Any]]:
-    """Generate digest using the AI agent system.
+def create_mock_digest_agent() -> Any:
+    """Create a mock digest agent for fallback scenarios."""
+    agent_logger.log("[Mock Agent] Creating mock digest agent for fallback")
+    
+    # Mock agent is just a placeholder that will use generate_mock_digest
+    class MockAgent:
+        def __init__(self):
+            self.name = "MockAgent"
+        
+        def invoke(self, input_data):
+            # Extract preferences from the input
+            messages = input_data.get("messages", [])
+            if messages:
+                content = messages[0].get("content", "")
+                # Parse preferences from the content (simplified)
+                preferences = {
+                    'learn_about': 'technology',
+                    'fun_learning': 'quotes',
+                    'time_budget': 'quick'
+                }
+                return generate_mock_digest(preferences, use_live_data=False)
+            return []
+    
+    return MockAgent()
+
+def generate_digest_with_real_agent(preferences: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Generate digest using the real AI agent with live data only.
     
     Args:
         preferences: User preferences dictionary
-        use_live_data: Whether to use live data sources (default: False)
+    
+    Returns:
+        List of processed digest sections from live data
+    """
+    agent_logger.log("[Real Agent] Starting real agentic digest generation with live data...")
+    
+    # Try to create the real agent
+    agent = create_real_digest_agent()
+    
+    if agent is None:
+        agent_logger.log("[Real Agent] Cannot create real agent - no OpenAI API key")
+        return []
+    
+    try:
+        # Use the real agent to generate the digest with live data only
+        result = agent.invoke({
+            "messages": [{
+                "role": "user", 
+                "content": f"Create a personalized morning digest using ONLY live data sources. User preferences: {json.dumps(preferences, indent=2)}. Focus on tech/AI content from Hacker News."
+            }]
+        })
+        
+        agent_logger.log("[Real Agent] Real agent completed successfully")
+        
+        # Parse the result from the agent
+        agent_logger.log(f"[Real Agent] Agent returned: {type(result)}")
+
+        print("----------------REAL AGENT RESULT----------------")
+        print(result)
+        print("--------------------------------")
+        
+        if isinstance(result, dict) and 'messages' in result:
+            # LangGraph agents return a dict with 'messages' key
+            messages = result['messages']
+            if messages and len(messages) > 0:
+                # Look for the last message that has tool calls
+                for message in reversed(messages):
+                    if hasattr(message, 'tool_calls') and message.tool_calls:
+                        # Check if it's a DigestResponse tool call
+                        for tool_call in message.tool_calls:
+                            if tool_call.get('name') == 'DigestResponse':
+                                # Extract the structured data
+                                args = tool_call.get('args', {})
+                                agent_logger.log(f"[Real Agent] Found DigestResponse tool call with {len(args.get('sections', []))} sections")
+                                
+                                # Convert to our expected format
+                                sections = []
+                                for section_data in args.get('sections', []):
+                                    section_dict = {
+                                        'id': section_data.get('id', 'unknown'),
+                                        'title': section_data.get('title', 'Untitled'),
+                                        'kind': section_data.get('kind', 'need'),
+                                        'items': [
+                                            {
+                                                'text': item.get('text', ''),
+                                                'url': item.get('url') if item.get('url') else None
+                                            }
+                                            for item in section_data.get('items', [])
+                                        ]
+                                    }
+                                    sections.append(section_dict)
+                                
+                                agent_logger.log(f"[Real Agent] Successfully parsed {len(sections)} sections from structured output")
+                                return sections
+                
+                # No DigestResponse tool call found
+                agent_logger.log("[Real Agent] No DigestResponse tool call found in agent response")
+                return []
+        elif isinstance(result, list):
+            # Direct list format
+            return result
+        else:
+            # If agent returns something else, log and return empty
+            agent_logger.log(f"[Real Agent] Agent returned unexpected format: {type(result)}")
+            return []
+        
+    except Exception as e:
+        agent_logger.log(f"[Real Agent] Error during real agent execution: {e}")
+        return []
+
+def generate_digest_with_agent(preferences: Dict[str, Any], use_live_data: bool = False) -> List[Dict[str, Any]]:
+    """Generate digest using the appropriate agent system.
+    
+    Args:
+        preferences: User preferences dictionary
+        use_live_data: Whether to prefer live data sources (default: False)
     
     Returns:
         List of processed digest sections
@@ -113,66 +254,52 @@ def generate_digest_with_agent(preferences: Dict[str, Any], use_live_data: bool 
     agent_logger.clear_logs()
     agent_logger.log("[Agent] Starting agentic digest generation...")
     
-    # Try to create the agent
-    agent = create_digest_agent()
+    if use_live_data:
+        # Try real agent first
+        agent_logger.log("[Agent] Attempting to use real agent with live data...")
+        real_result = generate_digest_with_real_agent(preferences)
+        
+        if real_result:
+            agent_logger.log(f"[Agent] Real agent generated {len(real_result)} sections")
+            return real_result
+        else:
+            agent_logger.log("[Agent] Real agent failed, falling back to mock agent")
     
-    if agent is None:
-        # Fallback to mock generation if no agent available
-        agent_logger.log("[Agent] Falling back to mock generation (no OpenAI API key)")
-        return generate_mock_digest(preferences, use_live_data)
-    
-    try:
-        # Use the agent to generate the digest
-        result = agent.invoke({
-            "messages": [{
-                "role": "user", 
-                "content": f"Create a personalized morning digest based on these preferences: {json.dumps(preferences, indent=2)}. Use live_data={use_live_data} for content fetching."
-            }]
-        })
-        
-        # Extract the final content from agent response
-        # This would need to be parsed from the agent's final response
-        agent_logger.log("[Agent] Agent completed successfully")
-        
-        # For now, return mock data while we build the full integration
-        return generate_mock_digest(preferences, use_live_data)
-        
-    except Exception as e:
-        agent_logger.log(f"[Agent] Error during agent execution: {e}")
-        agent_logger.log("[Agent] Falling back to mock generation")
-        return generate_mock_digest(preferences, use_live_data)
+    # Fallback to mock agent
+    agent_logger.log("[Agent] Using mock agent for digest generation")
+    return generate_mock_digest(preferences, use_live_data=False)
 
 def generate_mock_digest(preferences: Dict[str, Any], use_live_data: bool = False) -> List[Dict[str, Any]]:
     """Generate digest using mock data and rule-based logic."""
     
     # Use the agent tools directly for mock generation
-    strategy = analyze_user_preferences.func(preferences)
+    strategy = analyze_user_preferences.invoke({"preferences": preferences})
     
     items_to_add = []
     
     # Fetch and process content based on strategy
     if strategy['include_tech']:
-        tech_content = fetch_content_by_type.func('tech', use_live_data)
+        tech_content = fetch_content_by_type.invoke({"content_type": 'tech', "use_live_data": use_live_data})
         if tech_content['items']:
-            processed = process_content_item.func(tech_content['items'][0], 'serious')
+            processed = process_content_item.invoke({"item": tech_content['items'][0], "item_type": 'serious'})
             items_to_add.append(processed)
     
     if strategy['include_quotes']:
-        quote_content = fetch_content_by_type.func('quotes', False)  # Always use mock for quotes
+        quote_content = fetch_content_by_type.invoke({"content_type": 'quotes', "use_live_data": False})  # Always use mock for quotes
         if quote_content['items']:
-            processed = process_content_item.func(quote_content['items'][0], 'fun')
+            processed = process_content_item.invoke({"item": quote_content['items'][0], "item_type": 'fun'})
             items_to_add.append(processed)
     
     if strategy['include_tech'] and len(items_to_add) < strategy['max_items']:
-        tech_content = fetch_content_by_type.func('tech', use_live_data) 
+        tech_content = fetch_content_by_type.invoke({"content_type": 'tech', "use_live_data": use_live_data}) 
         if len(tech_content['items']) > 1:
-            processed = process_content_item.func(tech_content['items'][1], 'serious')
+            processed = process_content_item.invoke({"item": tech_content['items'][1], "item_type": 'serious'})
             items_to_add.append(processed)
     
     if strategy['include_history'] and len(items_to_add) < strategy['max_items']:
-        history_content = fetch_content_by_type.func('history', False)  # Always use mock for history
+        history_content = fetch_content_by_type.invoke({"content_type": 'history', "use_live_data": False})  # Always use mock for history
         if history_content['items']:
-            processed = process_content_item.func(history_content['items'][0], 'fun')
+            processed = process_content_item.invoke({"item": history_content['items'][0], "item_type": 'fun'})
             items_to_add.append(processed)
     
     # Convert to sections format

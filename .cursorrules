@@ -1,0 +1,106 @@
+# Agentic Morning Digest - Cursor Rules
+
+## Project Identity
+You are working on the **Agentic Morning Digest** - a one-day MVP that generates personalized daily digests mixing "need-to-know" (AI/news/history/politics) with "nice-to-know" (quotes, trivia, what-ifs). The output is a Streamlit app with a visible "Agent Thinking Log."
+
+## Core Architecture & Data Flow
+```
+User Prefs → Manager.plan_sections() → Retriever.fetch_*() → Editors.transform() → Presenter.render()
+                    ↓
+              Agent Log (tracks all decisions)
+```
+
+### Module Responsibilities
+- **app.py**: Streamlit UI + wiring + Agent Log display
+- **manager.py**: Plans sections & order (need/nice interleave) + decision logging  
+- **retriever.py**: Scraping (HN/Wiki/Quotes) + cache + USE_LIVE flag + fallback logic
+- **editors.py**: NeedToKnow / NiceToKnow content transformers + LLM calls
+- **presenter.py**: Pure rendering helpers (no business logic)
+- **prefs.py**: Load/save user preferences (JSON / session_state)
+- **data/static_samples.json**: Fallback content for demo resilience
+
+## Tech Stack
+- **Frontend**: Streamlit
+- **LLM**: GPT (minimal calls, temperature=0.2, deterministic)
+- **Agent Framework**: LangGraph for AI agent orchestration
+- **Retrieval**: Playwright (JS sites) + BeautifulSoup (parse)
+- **Storage**: In-memory / JSON file for prefs + cached content
+- **Python**: 3.11+ with type hints
+
+## Section Contract
+Each section is a dict:
+```python
+{
+  "id": "quick_hits" | "deep_dive" | "did_you_know" | "fun_spark" | "quote",
+  "title": "📌 Quick Hits You Should Know",
+  "kind": "need" | "nice",
+  "items": [{"text": "...", "url": optional}]
+}
+```
+
+## Coding Standards
+- **Python 3.11+** with type hints
+- **Small pure functions** with docstrings
+- **Black formatting** standard
+- **No secrets in code** - use environment variables (OPENAI_API_KEY)
+- **@st.cache_data(ttl=600)** for network calls
+- **Timebox scraping** to 3s/site, then fallback
+- **LLM calls**: temperature=0.2, bounded output with explicit limits
+
+## Fallback Strategy
+Always implement: **Live Data → Cache → Static Samples**
+- Log failures and switch reasons
+- Keep UI responsive, never crash app
+- Regenerate only failed sections, not whole page
+
+## Agentic Workflow Rules
+1. **Planning**: If topics include AI/History/Politics → select `quick_hits`, `deep_dive` (need)
+2. **Always include** one `nice` block (`quote` or `fun_spark`)
+3. **Interleave pattern**: need → nice → need (max 3–4 sections)
+4. **Log all decisions** to "Agent Thinking Log"
+5. **Observability**: Every step appends concise log: `[Planner] chose X`, `[Retriever] cache hit for HN`
+
+## Data Sources (3 primary)
+- **Hacker News** (front page) → "Quick Hits" tech/AI headlines  
+- **Wikipedia – Selected anniversaries** → "Did You Know" history bits  
+- **quotes.toscrape.com** → "Quote / Fun Spark"
+
+## Implementation Priority
+1. **MVP Foundation**: app.py skeleton with sidebar prefs, Generate button, Agent Log expander
+2. **Static Data**: Create data/static_samples.json with sample content
+3. **Planning Logic**: Implement manager.plan_sections() with decision rules and logging
+4. **Presentation Layer**: Build presenter.render() with markdown cards and collapsible expanders
+5. **Content Pipeline**: Implement retriever.py cache + mock + optional live scraping
+6. **LLM Integration**: Add minimal LLM calls for "Deep Dive" summaries only
+
+## Demo Constraints
+- Must show: pick preferences → show "Agent plan" → interleaved sections (need/nice) → regenerate
+- Fast and reliable: prefer **cached/mocked** data if scraping/LLM is slow
+- 3-minute screen recording capability
+
+## Non-Goals
+- Building auth, multi-user infrastructure
+- Production database setup
+- Fancy styling beyond functional UI
+- Real-time crawling beyond the three sources
+
+## LangGraph Resources
+Reference documentation in `/tutorials/langgraph-docs/`:
+- Agent Overview: `/agents/overview.md`
+- Prebuilt Components: `/agents/prebuilt.md`
+- Multi-Agent Systems: `/agents/multi-agent.md`
+- Memory Integration and Human-in-the-loop patterns
+
+## Development Commands
+- **Environment**: Use `news_push` conda/virtual environment
+- **Install**: `pip install -r requirements.txt`
+- **Run**: `cd app && streamlit run app.py`
+- **Environment**: Ensure `OPENAI_API_KEY` is set
+
+## Code Quality Rules
+- Prefer elegant, direct solutions over complicated approaches
+- Avoid code smells and suggest refactoring when beneficial
+- Verify assumptions by examining existing code before making changes
+- Use semantic search to understand codebase before implementing features
+- Maintain clean separation of concerns between modules
+- Always implement proper error handling and logging
