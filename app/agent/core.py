@@ -111,10 +111,17 @@ def create_real_digest_agent() -> Optional[Any]:
 5. Process and format the content for presentation
 6. ALWAYS use the DigestResponse tool to return your final structured response
 
+SECTION REQUIREMENTS:
+- Generate exactly 10 sections total
+- Balance between "need" (need-to-know) and "nice" (nice-to-know) content
+- Use alternating pattern: need → nice → need → nice → need → nice → need → nice → need → nice
+- Each section should have 2-4 items for comprehensive coverage
+- Mix tech/AI news (need) with quotes, fun facts, or interesting stories (nice)
+
 IMPORTANT: 
 - Only use live data. If a data source fails, log the error but do not fall back to mock data.
-- Be concise and focused on creating a personalized experience with real, current information.
-- ALWAYS call the DigestResponse tool at the end to return your structured digest."""
+- Be comprehensive and create a rich, balanced experience with real, current information.
+- ALWAYS call the DigestResponse tool at the end to return your structured digest with exactly 10 sections."""
         
         agent = create_react_agent(
             model=model_with_tools,

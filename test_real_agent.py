@@ -3,6 +3,10 @@
 
 import sys
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
 sys.path.append(os.path.join(os.path.dirname(__file__), 'app'))
 
 from agent.core import generate_digest_with_real_agent, get_agent_logs, agent_logger
