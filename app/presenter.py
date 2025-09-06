@@ -88,13 +88,13 @@ def render_agent_log(log_entries: List[str]) -> None:
 
 def show_empty_state() -> None:
     """Show the initial empty state before digest generation."""
-    st.title("🌅 Agentic Morning Digest")
+    st.title("🤖 Agentic Morning Digest")
     st.markdown("""
-    Welcome to your personalized morning digest! This AI agent will create a custom blend of:
+    Welcome to your personalized morning digest! Our **LangGraph AI Agent** will create a custom blend of:
     
     **Need-to-Know** 📌
     - AI/Tech headlines from Hacker News
-    - Important political and world events
+    - Important political and world events  
     - Deep dive analysis on topics you care about
     
     **Nice-to-Know** ✨ 
@@ -102,7 +102,13 @@ def show_empty_state() -> None:
     - Inspirational quotes to start your day
     - Fun "what-if" scenarios and trivia
     
-    Configure your preferences in the sidebar and click **Generate My Digest** to get started!
+    **🧠 AI Agent Features:**
+    - Intelligent content planning based on your interests
+    - Dynamic alternating serious/fun pattern
+    - Transparent reasoning in the Agent Thinking Log
+    - Fallback to cached content for reliability
+    
+    Configure your preferences in the sidebar and click **Generate My Digest** to see the AI agent in action!
     """)
 
 def show_generation_status(status: str) -> None:

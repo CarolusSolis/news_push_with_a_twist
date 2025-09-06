@@ -8,6 +8,7 @@ from pathlib import Path
 # Import our modules
 from prefs import render_preferences_sidebar
 from presenter import render_sections, render_agent_log, show_empty_state, show_generation_status
+from agent import generate_digest_with_agent, get_agent_logs
 
 # Page config
 st.set_page_config(
@@ -145,32 +146,42 @@ def create_mock_sections(prefs: Dict[str, Any], mock_data: Dict[str, Any]) -> Li
     return sections
 
 def generate_digest(prefs: Dict[str, Any]) -> None:
-    """Generate the morning digest based on preferences."""
+    """Generate the morning digest based on preferences using AI agent."""
     st.session_state.generation_status = 'planning'
     st.session_state.agent_log = []  # Clear previous log
     
-    # Load mock data
-    mock_data = load_mock_data()
-    if not mock_data:
-        st.error("Could not load mock data")
-        return
-    
-    # Simulate generation steps with status updates
+    # Show generation steps with status updates
     show_generation_status('planning')
     st.session_state.generation_status = 'fetching'
     
-    show_generation_status('fetching')
+    show_generation_status('fetching')  
     st.session_state.generation_status = 'processing'
     
     show_generation_status('processing')
     st.session_state.generation_status = 'rendering'
     
-    # Create sections
-    sections = create_mock_sections(prefs, mock_data)
-    st.session_state.digest_sections = sections
-    
-    show_generation_status('complete')
-    st.session_state.generation_status = 'complete'
+    # Generate digest using AI agent
+    try:
+        sections = generate_digest_with_agent(prefs)
+        st.session_state.digest_sections = sections
+        
+        # Get agent logs and add to session state
+        agent_logs = get_agent_logs()
+        st.session_state.agent_log = agent_logs
+        
+        show_generation_status('complete')
+        st.session_state.generation_status = 'complete'
+        
+    except Exception as e:
+        st.error(f"Failed to generate digest: {e}")
+        # Fallback to mock generation
+        mock_data = load_mock_data()
+        if mock_data:
+            sections = create_mock_sections(prefs, mock_data)
+            st.session_state.digest_sections = sections
+        
+        show_generation_status('complete')
+        st.session_state.generation_status = 'complete'
 
 def main():
     """Main Streamlit app."""
@@ -183,12 +194,12 @@ def main():
     
     with col2:
         # Generate button
-        if st.button("🚀 Generate My Digest", type="primary", use_container_width=True):
+        if st.button("🤖 Generate My Digest", type="primary", use_container_width=True):
             generate_digest(prefs)
         
         # Regenerate button (only show if digest exists)
         if st.session_state.digest_sections:
-            if st.button("🔄 Regenerate", use_container_width=True):
+            if st.button("🔄 Regenerate with AI", use_container_width=True):
                 generate_digest(prefs)
     
     with col1:

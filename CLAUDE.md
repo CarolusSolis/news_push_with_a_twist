@@ -22,9 +22,17 @@ You are the **Agentic Morning Digest** dev assistant. Goal: ship a one-day MVP t
 ## 2) Tech Stack (MVP)
 - **Frontend:** Streamlit
 - **LLM:** GPT (for summaries/reframes); keep calls minimal and deterministic (temperature low)
+- **Agent Framework:** LangGraph for AI agent orchestration (see tutorials in `/tutorials/langgraph-docs/`)
 - **Retrieval:** Playwright (JS sites) + BeautifulSoup (parse). Provide **mock switch** + **cache**
-- **Lang orchestration:** Simple Python functions; only add LangGraph/Strands/CrewAI if needed
 - **Storage:** In-memory / JSON file for prefs + cached content
+
+### LangGraph Resources
+Reference documentation in `/tutorials/langgraph-docs/`:
+- **Agent Overview:** `/agents/overview.md` - Core agent concepts and patterns
+- **Prebuilt Components:** `/agents/prebuilt.md` - Ready-to-use agent building blocks  
+- **Multi-Agent Systems:** `/agents/multi-agent.md` - Coordinating multiple agents
+- **Memory Integration:** How-to guides for session and persistent memory
+- **Human-in-the-loop:** Patterns for interactive agent workflows
 
 ## 3) Sources (start with 3)
 - **Hacker News** (front page) → “Quick Hits” tech/AI headlines  
