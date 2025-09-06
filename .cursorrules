@@ -25,7 +25,7 @@ User Prefs → Agent System (Real/Mock) → Structured Output → Presenter.rend
 - **Structured Output**: Pydantic schemas with tool calling
 - **Retrieval**: requests + BeautifulSoup for web scraping
 - **Storage**: In-memory / JSON file for prefs + cached content
-- **Audio**: TTS (Text-to-Speech) for AI voiceover (planned)
+- **Audio**: OpenAI TTS API for AI voiceover (✅ IMPLEMENTED)
 - **Python**: 3.11+ with type hints
 
 ## Section Contract
@@ -71,6 +71,19 @@ Always implement: **Live Data → Static Samples**
 5. **Log all decisions** to "Agent Thinking Log"
 6. **Observability**: Every step appends concise log: `[Planner] chose X`, `[Retriever] cache hit for HN`
 
+## AI Voiceover System
+### Architecture
+- **Script Generation**: GPT-4o converts digest sections into engaging voiceover scripts
+- **Text-to-Speech**: OpenAI TTS API with 6 voice options (Alloy, Echo, Fable, Onyx, Nova, Shimmer)
+- **Audio Storage**: Files saved to `app/voiceover/generated/` with unique UUID names
+- **Audio Player**: Streamlit native audio player with file path serving
+
+### User Flow
+1. Generate digest → Click "🎙️ Generate Voiceover" → AI creates script → TTS generates audio → Play in browser
+2. Voice selection in sidebar preferences
+3. Script viewable in expandable section
+4. Audio files persist in generated/ directory
+
 ## Data Sources
 ### Currently Implemented (Live Data)
 - **Hacker News** (front page) → "Quick Hits" tech/AI headlines (✅ LIVE)
@@ -91,28 +104,32 @@ Always implement: **Live Data → Static Samples**
 6. **Static Data**: Create data/static_samples.json with sample content for fallback
 7. **10-Section Generation**: Real agent now generates exactly 10 sections with need/nice balance
 8. **User Agent Toggle**: UI control to switch between real and mock agents
+9. **AI Voiceover System**: Complete TTS integration with script generation and audio playback
+10. **Title/Description Structure**: Proper section titles as headlines with item text as descriptions
+11. **Audio Player Integration**: Working audio playback with file storage in voiceover/generated/
 
 ### 📋 Next Steps
-1. **AI Voiceover**: Add AI voiceover to the digest, speaking like a friendly morning digest host
-2. **Additional Live Data Sources**: Wikipedia anniversaries, quotes.toscrape.com
-3. **Enhanced Content Processing**: More sophisticated content analysis and categorization
-4. **User Preferences**: More granular control over content types and sources
+1. **Additional Live Data Sources**: Wikipedia anniversaries, quotes.toscrape.com
+2. **Enhanced Content Processing**: More sophisticated content analysis and categorization
+3. **User Preferences**: More granular control over content types and sources
+4. **Voice Customization**: More voice options and speech rate controls
 
 ## Planned Features
 ### 🎯 High Priority
-- **AI Voiceover**: TTS integration with friendly morning digest host persona for audio experience
+- **Additional Data Sources**: Expand beyond Hacker News to include Wikipedia, quotes, and other news sources
 
 ### 🔄 Medium Priority  
-- **Additional Data Sources**: Expand beyond Hacker News to include Wikipedia, quotes, and other news sources
 - **Enhanced Processing**: More sophisticated content analysis and categorization algorithms
 - **Advanced Preferences**: Granular user control over content types, sources, and presentation
+- **Voice Customization**: More voice options, speech rate controls, and audio quality settings
 
 ## Demo Constraints
 - Must show: pick preferences → show "Agent plan" → 10 interleaved sections (need/nice) → regenerate
 - Fast and reliable: prefer **cached/mocked** data if scraping/LLM is slow
 - 3-minute screen recording capability
-- Currently demonstrates: Hacker News live data → 10-section digest with agent thinking log
-- Future demo: Include AI voiceover as friendly morning digest host
+- Currently demonstrates: Hacker News live data → 10-section digest with agent thinking log → AI voiceover
+- Demo flow: Generate digest → Generate voiceover → Listen to AI-hosted morning digest
+- Audio files stored in: app/voiceover/generated/ directory
 
 ## Non-Goals
 - Building auth, multi-user infrastructure

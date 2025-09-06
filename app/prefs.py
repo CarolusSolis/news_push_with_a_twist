@@ -23,7 +23,8 @@ def get_default_preferences() -> Dict[str, Any]:
         'time_budget': 'quick',
         'include_deep_dive': True,
         'include_quotes': True,
-        'use_live_data': True
+        'use_live_data': True,
+        'voiceover_voice': 'alloy'
     }
 
 def render_preferences_sidebar() -> Dict[str, Any]:
@@ -80,6 +81,27 @@ def render_preferences_sidebar() -> Dict[str, Any]:
         help="Real Agent: Uses live Hacker News data. Mock Agent: Uses static sample data for demo."
     )
     
+    # Voiceover settings
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🎙️ Voiceover Settings")
+    
+    voice_options = [
+        ("alloy", "Alloy - Neutral, balanced voice"),
+        ("echo", "Echo - Clear, professional voice"),
+        ("fable", "Fable - Warm, storytelling voice"),
+        ("onyx", "Onyx - Deep, authoritative voice"),
+        ("nova", "Nova - Bright, energetic voice"),
+        ("shimmer", "Shimmer - Soft, gentle voice")
+    ]
+    
+    selected_voice = st.sidebar.selectbox(
+        "Voice for AI Voiceover",
+        options=[voice[0] for voice in voice_options],
+        index=0,
+        format_func=lambda x: next(voice[1] for voice in voice_options if voice[0] == x),
+        help="Choose the voice for your AI-generated voiceover"
+    )
+    
     # Build preferences dict
     prefs = {
         'learn_about': learn_about,
@@ -88,7 +110,8 @@ def render_preferences_sidebar() -> Dict[str, Any]:
         'time_budget': time_budget,
         'include_deep_dive': include_deep_dive,
         'include_quotes': include_quotes,
-        'use_live_data': use_live_data
+        'use_live_data': use_live_data,
+        'voiceover_voice': selected_voice
     }
     
     # Save to session state
