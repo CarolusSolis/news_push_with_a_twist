@@ -15,6 +15,9 @@ from langgraph.prebuilt import create_react_agent
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import BaseTool
 
+# Tavily search
+from langchain_tavily import TavilySearch
+
 # Pydantic for structured output
 from pydantic import BaseModel, Field
 from typing import List as TypingList
@@ -94,9 +97,21 @@ def create_real_digest_agent() -> Optional[Any]:
     
     # Define the tools the real agent can use (LIVE DATA ONLY)
     tools = [
-        scrape_hacker_news,  # Only Hacker News for now, no mock data
+        scrape_hacker_news,  # Hacker News for tech/AI content
         DigestResponse  # Add the structured output schema as a tool
     ]
+    
+    # Add Tavily search if API key is available
+    tavily_api_key = os.getenv('TAVILY_API_KEY')
+    if tavily_api_key:
+        tavily_search_tool = TavilySearch(
+            max_results=5,
+            topic="general",
+        )
+        tools.append(tavily_search_tool)
+        agent_logger.log("[Real Agent] Tavily search tool added")
+    else:
+        agent_logger.log("[Real Agent] No TAVILY_API_KEY found - Tavily search not available")
     
     try:
         # First bind tools, then apply structured output (as per documentation)
@@ -105,9 +120,11 @@ def create_real_digest_agent() -> Optional[Any]:
         system_prompt = """You are the Real Agentic Morning Digest Planner. Your job is to:
 
 1. Use ONLY live data sources - no mock or cached data
-2. Fetch real content from Hacker News using the scrape_hacker_news tool
+2. Fetch real content using available tools:
+   - scrape_hacker_news: For tech/AI headlines and news
+   - tavily_search: For fun facts, current events, historical content, and additional information
 3. Create a personalized digest based on user preferences
-4. Focus on tech/AI content from Hacker News
+4. Mix tech/AI content with fun facts, current events, and historical content
 5. Process and format the content for presentation
 6. ALWAYS use the DigestResponse tool to return your final structured response
 
@@ -116,17 +133,18 @@ SECTION REQUIREMENTS:
 - Balance between "need" (need-to-know) and "nice" (nice-to-know) content
 - Use alternating pattern: need → nice → need → nice → need → nice → need → nice → need → nice
 - Each section should have 2-4 items for comprehensive coverage
-- Mix tech/AI news (need) with quotes, fun facts, or interesting stories (nice)
+- Mix tech/AI news (need) with fun facts, current events, or historical content (nice)
 
 CONTENT STRUCTURE:
-- Use Hacker News article TITLES as your section titles (e.g., "OpenAI Releases GPT-5 with 10x Performance Improvements")
-- For each section, create 2-4 items where each item's text is a detailed description/explanation of what that headline means
-- Since Hacker News doesn't provide descriptions, generate sensible, informative descriptions for each headline
+- Use article TITLES as your section titles (e.g., "OpenAI Releases GPT-5 with 10x Performance Improvements")
+- For each section, create 2-4 items where each item's text is a detailed description/explanation
+- Generate sensible, informative descriptions for each headline
 - Make descriptions engaging and informative, explaining the significance and implications
 
 IMPORTANT: 
 - Only use live data. If a data source fails, log the error but do not fall back to mock data.
 - Be comprehensive and create a rich, balanced experience with real, current information.
+- Use Tavily search to find interesting fun facts, current events, and historical content to balance the digest.
 - ALWAYS call the DigestResponse tool at the end to return your structured digest with exactly 10 sections."""
         
         agent = create_react_agent(
