@@ -5,25 +5,25 @@ You are working on the **Agentic Morning Digest** - a one-day MVP that generates
 
 ## Core Architecture & Data Flow
 ```
-User Prefs → Manager.plan_sections() → Retriever.fetch_*() → Editors.transform() → Presenter.render()
+User Prefs → Agent System (Real/Mock) → Structured Output → Presenter.render()
                     ↓
               Agent Log (tracks all decisions)
 ```
 
 ### Module Responsibilities
 - **app.py**: Streamlit UI + wiring + Agent Log display
-- **manager.py**: Plans sections & order (need/nice interleave) + decision logging  
-- **retriever.py**: Scraping (HN/Wiki/Quotes) + cache + USE_LIVE flag + fallback logic
-- **editors.py**: NeedToKnow / NiceToKnow content transformers + LLM calls
+- **agent/core.py**: Real agent (live data) + Mock agent (fallback) + structured output
+- **agent/tools/**: LangChain tools for data retrieval and content processing
 - **presenter.py**: Pure rendering helpers (no business logic)
 - **prefs.py**: Load/save user preferences (JSON / session_state)
 - **data/static_samples.json**: Fallback content for demo resilience
 
 ## Tech Stack
 - **Frontend**: Streamlit
-- **LLM**: GPT (minimal calls, temperature=0.2, deterministic)
-- **Agent Framework**: LangGraph for AI agent orchestration
-- **Retrieval**: Playwright (JS sites) + BeautifulSoup (parse)
+- **LLM**: GPT-4o (temperature=0.2, deterministic)
+- **Agent Framework**: LangGraph + LangChain for AI agent orchestration
+- **Structured Output**: Pydantic schemas with tool calling
+- **Retrieval**: requests + BeautifulSoup for web scraping
 - **Storage**: In-memory / JSON file for prefs + cached content
 - **Python**: 3.11+ with type hints
 
@@ -46,9 +46,17 @@ Each section is a dict:
 - **@st.cache_data(ttl=600)** for network calls
 - **Timebox scraping** to 3s/site, then fallback
 - **LLM calls**: temperature=0.2, bounded output with explicit limits
+- **Structured Output**: Use Pydantic schemas with tool calling, avoid custom parsing
+
+## Agent Architecture
+- **Real Agent**: Uses live data sources (Hacker News, etc.) with structured Pydantic output
+- **Mock Agent**: Fallback agent using static/cached data for reliability
+- **Structured Output**: All agents return `DigestResponse` schema with sections and items
+- **Tool Integration**: LangChain tools for data retrieval and content processing
+- **Fallback Chain**: Real Agent → Mock Agent → Static Samples
 
 ## Fallback Strategy
-Always implement: **Live Data → Cache → Static Samples**
+Always implement: **Live Data → Static Samples**
 - Log failures and switch reasons
 - Keep UI responsive, never crash app
 - Regenerate only failed sections, not whole page
@@ -67,11 +75,11 @@ Always implement: **Live Data → Cache → Static Samples**
 
 ## Implementation Priority
 1. **MVP Foundation**: app.py skeleton with sidebar prefs, Generate button, Agent Log expander
-2. **Static Data**: Create data/static_samples.json with sample content
-3. **Planning Logic**: Implement manager.plan_sections() with decision rules and logging
-4. **Presentation Layer**: Build presenter.render() with markdown cards and collapsible expanders
-5. **Content Pipeline**: Implement retriever.py cache + mock + optional live scraping
-6. **LLM Integration**: Add minimal LLM calls for "Deep Dive" summaries only
+2. **Agent System**: Real agent with live data + Mock agent fallback
+3. **Structured Output**: Pydantic schemas with tool calling for consistent parsing
+4. **Tool Integration**: LangChain tools for data retrieval (Hacker News, etc.)
+5. **Presentation Layer**: Build presenter.render() with markdown cards and collapsible expanders
+6. **Static Data**: Create data/static_samples.json with sample content for fallback
 
 ## Demo Constraints
 - Must show: pick preferences → show "Agent plan" → interleaved sections (need/nice) → regenerate
