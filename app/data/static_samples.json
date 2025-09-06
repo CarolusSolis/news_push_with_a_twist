@@ -1,0 +1,54 @@
+{
+  "hacker_news": [
+    {
+      "title": "OpenAI Releases GPT-5 with 10x Performance Improvements",
+      "url": "https://news.ycombinator.com/item?id=123456",
+      "snippet": "The new model shows significant advances in reasoning, coding, and multimodal capabilities while reducing compute costs."
+    },
+    {
+      "title": "Apple Announces M4 Chip with Neural Processing Unit",
+      "url": "https://news.ycombinator.com/item?id=123457",
+      "snippet": "The new chip features dedicated AI hardware that promises to revolutionize on-device machine learning."
+    },
+    {
+      "title": "Meta's New AR Glasses Preview at Connect 2024",
+      "url": "https://news.ycombinator.com/item?id=123458",
+      "snippet": "Early demos show lightweight glasses capable of real-time translation and contextual information overlay."
+    }
+  ],
+  "wikipedia_today": [
+    {
+      "title": "1969 – Apollo 11 Moon Landing",
+      "snippet": "Neil Armstrong and Buzz Aldrin became the first humans to land on the Moon during NASA's Apollo 11 mission.",
+      "year": 1969
+    },
+    {
+      "title": "1969 – Woodstock Music Festival Begins", 
+      "snippet": "The iconic music festival started in Bethel, New York, featuring performances by Jimi Hendrix, Janis Joplin, and The Who.",
+      "year": 1969
+    },
+    {
+      "title": "1945 – World War II Ends",
+      "snippet": "Japan announced its surrender, effectively ending World War II after the atomic bombings of Hiroshima and Nagasaki.",
+      "year": 1945
+    }
+  ],
+  "quotes": [
+    {
+      "text": "The best time to plant a tree was 20 years ago. The second best time is now.",
+      "author": "Chinese Proverb"
+    },
+    {
+      "text": "Innovation distinguishes between a leader and a follower.",
+      "author": "Steve Jobs"
+    },
+    {
+      "text": "The only way to do great work is to love what you do.",
+      "author": "Steve Jobs"
+    },
+    {
+      "text": "Be yourself; everyone else is already taken.",
+      "author": "Oscar Wilde"
+    }
+  ]
+}
