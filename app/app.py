@@ -160,9 +160,10 @@ def generate_digest(prefs: Dict[str, Any]) -> None:
     show_generation_status('processing')
     st.session_state.generation_status = 'rendering'
     
-    # Generate digest using AI agent
+    # Generate digest using AI agent based on user preference
     try:
-        sections = generate_digest_with_agent(prefs)
+        use_live_data = prefs.get('use_live_data', True)
+        sections = generate_digest_with_agent(prefs, use_live_data=use_live_data)
         st.session_state.digest_sections = sections
         
         # Get agent logs and add to session state

@@ -22,7 +22,8 @@ def get_default_preferences() -> Dict[str, Any]:
         'mood': 'balanced',
         'time_budget': 'quick',
         'include_deep_dive': True,
-        'include_quotes': True
+        'include_quotes': True,
+        'use_live_data': True
     }
 
 def render_preferences_sidebar() -> Dict[str, Any]:
@@ -69,6 +70,16 @@ def render_preferences_sidebar() -> Dict[str, Any]:
         value=load_preferences().get('include_quotes', True)
     )
     
+    # Agent type selection
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🤖 Agent Settings")
+    
+    use_live_data = st.sidebar.checkbox(
+        "Use Real Agent (Live Data)",
+        value=load_preferences().get('use_live_data', True),
+        help="Real Agent: Uses live Hacker News data. Mock Agent: Uses static sample data for demo."
+    )
+    
     # Build preferences dict
     prefs = {
         'learn_about': learn_about,
@@ -76,7 +87,8 @@ def render_preferences_sidebar() -> Dict[str, Any]:
         'mood': mood,
         'time_budget': time_budget,
         'include_deep_dive': include_deep_dive,
-        'include_quotes': include_quotes
+        'include_quotes': include_quotes,
+        'use_live_data': use_live_data
     }
     
     # Save to session state
