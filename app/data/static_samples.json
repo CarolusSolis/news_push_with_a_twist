@@ -1,4 +1,130 @@
 {
+  "demo_digest": {
+    "sections": [
+      {
+        "id": "quick_hits",
+        "title": "Qwen3 30B A3B Hits 13 token/s on 4xRaspberry Pi 5",
+        "kind": "need",
+        "items": [
+          {
+            "text": "The Qwen3 30B A3B model has achieved a remarkable processing speed of 13 tokens per second using just four Raspberry Pi 5 devices. This breakthrough demonstrates the potential for powerful AI processing on low-cost, widely accessible hardware, making advanced AI more accessible to hobbyists and small developers.",
+            "url": "https://www.reddit.com/r/LocalLLaMA/comments/1na0mw3/qwen3_30b_a3b_hits_13_tokens_on_4x_raspberry_pi_5/"
+          }
+        ]
+      },
+      {
+        "id": "fun_spark",
+        "title": "A Guide To Siege Warfare And Tactics",
+        "kind": "nice",
+        "items": [
+          {
+            "text": "Medieval siege warfare was a complex and strategic endeavor, involving various tactics such as the use of siege engines like trebuchets and battering rams to breach castle walls. These methods highlight the ingenuity and resourcefulness of armies in overcoming fortified defenses.",
+            "url": "https://richiebilling.com/fantasy-writing/siege-warfare"
+          },
+          {
+            "text": "Siege warfare in medieval Europe was not just about brute force; it involved psychological tactics, including trickery and deception, to weaken the resolve of defenders. This aspect of warfare underscores the multifaceted nature of historical military strategies.",
+            "url": "https://example.com/siege-psychology"
+          }
+        ]
+      },
+      {
+        "id": "quick_hits",
+        "title": "How the \"Kim\" dump exposed North Korea's credential theft playbook",
+        "kind": "need",
+        "items": [
+          {
+            "text": "The \"Kim\" dump has revealed North Korea's sophisticated methods for stealing credentials, shedding light on the cyber warfare tactics employed by the regime. This exposure is crucial for understanding and countering state-sponsored cyber threats.",
+            "url": "https://example.com/kim-dump-cyber"
+          }
+        ]
+      },
+      {
+        "id": "fun_spark",
+        "title": "Ten Strange, Endearing and Alarming Animal Courtship Rituals",
+        "kind": "nice",
+        "items": [
+          {
+            "text": "Animal mating rituals can be surprisingly complex and varied. For instance, some species engage in elaborate dances or gift-giving to attract mates, while others have more aggressive or bizarre methods, such as the explosive mating of certain bee species.",
+            "url": "https://example.com/animal-courtship"
+          },
+          {
+            "text": "The mating rituals of animals often involve unique behaviors, such as the intricate dances of birds or the peculiar courtship displays of insects, showcasing the diversity of nature's reproductive strategies.",
+            "url": "https://example.com/animal-behaviors"
+          }
+        ]
+      },
+      {
+        "id": "quick_hits",
+        "title": "Utah's hottest new power source is 15k feet below the ground",
+        "kind": "need",
+        "items": [
+          {
+            "text": "Utah is tapping into geothermal energy located 15,000 feet below the ground, representing a significant advancement in sustainable energy technology. This development could pave the way for more widespread use of geothermal resources, reducing reliance on fossil fuels.",
+            "url": "https://example.com/utah-geothermal"
+          }
+        ]
+      },
+      {
+        "id": "fun_spark",
+        "title": "Forgotten Inventors | American Experience",
+        "kind": "nice",
+        "items": [
+          {
+            "text": "The 1800s were a time of remarkable innovation, with inventions like the Jacquard Loom and the steam locomotive revolutionizing industries. However, many inventions from this era, such as early electric cars and unique food preservation methods, have been largely forgotten despite their impact on modern technology.",
+            "url": "https://example.com/forgotten-inventors"
+          },
+          {
+            "text": "Some inventions from the 19th century, like the oil burner and the can opener, played crucial roles in everyday life and industrial processes, yet they often go unrecognized in the broader narrative of technological progress.",
+            "url": "https://example.com/19th-century-inventions"
+          }
+        ]
+      },
+      {
+        "id": "quick_hits",
+        "title": "A Navajo weaving of an integrated circuit: the 555 timer",
+        "kind": "need",
+        "items": [
+          {
+            "text": "This unique project combines traditional Navajo weaving techniques with modern technology by creating a woven representation of the 555 timer integrated circuit. It highlights the intersection of art and technology, celebrating cultural heritage while embracing innovation.",
+            "url": "https://example.com/navajo-circuit"
+          }
+        ]
+      },
+      {
+        "id": "fun_spark",
+        "title": "History and classification of siege machines - Ancient and medieval",
+        "kind": "nice",
+        "items": [
+          {
+            "text": "Siege machines from the medieval era, such as catapults and battering rams, were crucial in warfare, allowing armies to breach fortified defenses. These machines were often ingeniously designed and adapted over time to meet the challenges of different fortifications.",
+            "url": "https://example.com/siege-machines"
+          }
+        ]
+      },
+      {
+        "id": "quick_hits",
+        "title": "Shipping textures as PNGs is suboptimal",
+        "kind": "need",
+        "items": [
+          {
+            "text": "The practice of shipping textures as PNG files in game development is considered suboptimal due to the larger file sizes and slower loading times compared to other formats. Optimizing texture formats can significantly enhance performance and user experience in digital applications.",
+            "url": "https://example.com/texture-optimization"
+          }
+        ]
+      },
+      {
+        "id": "fun_spark",
+        "title": "Weirdest Mating Rituals in the Animal Kingdom",
+        "kind": "nice",
+        "items": [
+          {
+            "text": "Some of the most bizarre mating rituals in the animal kingdom include the use of nuptial gifts, such as insects wrapped in silk by spiders, and the loud mating calls of the water boatman, which are among the loudest sounds relative to body size in nature.",
+            "url": "https://example.com/weird-mating-rituals"
+          }
+        ]
+      }
+    ]
+  },
   "hacker_news": [
     {
       "title": "OpenAI Releases GPT-5 with 10x Performance Improvements",

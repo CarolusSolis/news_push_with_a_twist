@@ -171,7 +171,8 @@ def generate_digest(prefs: Dict[str, Any]) -> None:
     # Generate digest using AI agent based on user preference
     try:
         use_live_data = prefs.get('use_live_data', True)
-        sections = generate_digest_with_agent(prefs, use_live_data=use_live_data)
+        demo_mode = prefs.get('demo_mode', False)
+        sections = generate_digest_with_agent(prefs, use_live_data=use_live_data, demo_mode=demo_mode)
         st.session_state.digest_sections = sections
         
         # Get agent logs and add to session state

@@ -279,7 +279,7 @@ def generate_digest_with_real_agent(preferences: Dict[str, Any]) -> List[Dict[st
         agent_logger.log(f"[Real Agent] Error during real agent execution: {e}")
         return []
 
-def generate_digest_with_agent(preferences: Dict[str, Any], use_live_data: bool = False) -> List[Dict[str, Any]]:
+def generate_digest_with_agent(preferences: Dict[str, Any], use_live_data: bool = False, demo_mode: bool = False) -> List[Dict[str, Any]]:
     """Generate digest using the appropriate agent system.
     
     Args:
@@ -290,6 +290,11 @@ def generate_digest_with_agent(preferences: Dict[str, Any], use_live_data: bool 
         List of processed digest sections
     """
     agent_logger.log("[Agent] Starting agentic digest generation...")
+    
+    # Check for demo mode first
+    if demo_mode:
+        agent_logger.log("[Agent] Demo mode enabled - using demo digest")
+        return generate_demo_digest(preferences, agent_logger)
     
     # Clear previous logs
     agent_logger.clear_logs()
@@ -309,6 +314,51 @@ def generate_digest_with_agent(preferences: Dict[str, Any], use_live_data: bool 
     # Fallback to mock agent
     agent_logger.log("[Agent] Using mock agent for digest generation")
     return generate_mock_digest(preferences, use_live_data=False)
+
+def generate_demo_digest(preferences: Dict[str, Any], agent_logger: 'AgentLogger') -> Dict[str, Any]:
+    """Generate a demo digest with simulated 20-second delay for demo purposes."""
+    import time
+    
+    agent_logger.log("[Demo] Starting demo digest generation...")
+    agent_logger.log("[Demo] Fetching live data from Hacker News...")
+    time.sleep(2)
+    
+    agent_logger.log("[Demo] Searching for creative content with Tavily...")
+    agent_logger.log("[Demo] Found: Medieval siege warfare tactics")
+    time.sleep(3)
+    
+    agent_logger.log("[Demo] Searching for more diverse content...")
+    agent_logger.log("[Demo] Found: Animal courtship rituals")
+    time.sleep(3)
+    
+    agent_logger.log("[Demo] Searching for historical content...")
+    agent_logger.log("[Demo] Found: Forgotten 19th century inventions")
+    time.sleep(3)
+    
+    agent_logger.log("[Demo] Processing and structuring content...")
+    time.sleep(2)
+    
+    agent_logger.log("[Demo] Generating 10 balanced sections...")
+    time.sleep(3)
+    
+    agent_logger.log("[Demo] Finalizing digest with need/nice pattern...")
+    time.sleep(4)
+    
+    # Load the demo digest from static data
+    try:
+        data_path = Path(__file__).parent.parent / "data" / "static_samples.json"
+        with open(data_path, 'r') as f:
+            static_data = json.load(f)
+        
+        demo_digest = static_data.get('demo_digest', {})
+        sections = demo_digest.get('sections', [])
+        agent_logger.log("[Demo] Demo digest generation complete!")
+        
+        return sections
+        
+    except Exception as e:
+        agent_logger.log(f"[Demo] Error loading demo data: {e}")
+        return generate_mock_digest(preferences, use_live_data=False)
 
 def generate_mock_digest(preferences: Dict[str, Any], use_live_data: bool = False) -> List[Dict[str, Any]]:
     """Generate digest using mock data and rule-based logic."""

@@ -24,6 +24,7 @@ def get_default_preferences() -> Dict[str, Any]:
         'include_deep_dive': True,
         'include_quotes': True,
         'use_live_data': True,
+        'demo_mode': False,
         'voiceover_voice': 'alloy'
     }
 
@@ -71,16 +72,6 @@ def render_preferences_sidebar() -> Dict[str, Any]:
         value=load_preferences().get('include_quotes', True)
     )
     
-    # Agent type selection
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("🤖 Agent Settings")
-    
-    use_live_data = st.sidebar.checkbox(
-        "Use Real Agent (Live Data)",
-        value=load_preferences().get('use_live_data', True),
-        help="Real Agent: Uses live Hacker News data. Mock Agent: Uses static sample data for demo."
-    )
-    
     # Voiceover settings
     st.sidebar.markdown("---")
     st.sidebar.subheader("🎙️ Voiceover Settings")
@@ -102,6 +93,22 @@ def render_preferences_sidebar() -> Dict[str, Any]:
         help="Choose the voice for your AI-generated voiceover"
     )
     
+    # Agent type selection
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🤖 Agent Settings")
+    
+    use_live_data = st.sidebar.checkbox(
+        "Use Real Agent (Live Data)",
+        value=load_preferences().get('use_live_data', True),
+        help="Real Agent: Uses live Hacker News data. Mock Agent: Uses static sample data for demo."
+    )
+    
+    demo_mode = st.sidebar.checkbox(
+        "Demo Mode (20s simulation)",
+        value=load_preferences().get('demo_mode', False),
+        help="Demo Mode: Simulates generation process for 20 seconds, then shows high-quality demo digest."
+    )
+    
     # Build preferences dict
     prefs = {
         'learn_about': learn_about,
@@ -111,6 +118,7 @@ def render_preferences_sidebar() -> Dict[str, Any]:
         'include_deep_dive': include_deep_dive,
         'include_quotes': include_quotes,
         'use_live_data': use_live_data,
+        'demo_mode': demo_mode,
         'voiceover_voice': selected_voice
     }
     
