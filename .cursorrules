@@ -50,12 +50,12 @@ Each section is a dict:
 - **Structured Output**: Use Pydantic schemas with tool calling, avoid custom parsing
 
 ## Agent Architecture
-- **Real Agent**: Uses live data sources (currently Hacker News only) with structured Pydantic output
+- **Real Agent**: Uses live data sources (Hacker News + Tavily Search) with structured Pydantic output
 - **Mock Agent**: Fallback agent using static/cached data for reliability
 - **Structured Output**: All agents return `DigestResponse` schema with exactly 10 sections
 - **Tool Integration**: LangChain tools for data retrieval and content processing
 - **Fallback Chain**: Real Agent → Mock Agent → Static Samples
-- **Current Live Tools**: `scrape_hacker_news` (more tools planned for future releases)
+- **Current Live Tools**: `scrape_hacker_news`, `tavily_search` (more tools planned for future releases)
 
 ## Fallback Strategy
 Always implement: **Live Data → Static Samples**
@@ -88,6 +88,10 @@ Always implement: **Live Data → Static Samples**
 ### Currently Implemented (Live Data)
 - **Hacker News** (front page) → "Quick Hits" tech/AI headlines (✅ LIVE)
   - Note: Hacker News items don't have descriptions, so AI generates sensible placeholder descriptions
+- **Tavily Search** → Creative, random fun facts and niche content (✅ LIVE)
+  - Uses multiple diverse, creative search queries for surprising content
+  - Avoids generic topics in favor of obscure, interesting, and weird facts
+  - Searches for 2-3 completely different random topics per digest
 
 ### Planned for Future Implementation
 - **Wikipedia – Selected anniversaries** → "Did You Know" history bits (📋 PLANNED)
@@ -99,7 +103,7 @@ Always implement: **Live Data → Static Samples**
 1. **MVP Foundation**: app.py skeleton with sidebar prefs, Generate button, Agent Log expander
 2. **Agent System**: Real agent with live data + Mock agent fallback
 3. **Structured Output**: Pydantic schemas with tool calling for consistent parsing
-4. **Tool Integration**: LangChain tools for data retrieval (Hacker News implemented)
+4. **Tool Integration**: LangChain tools for data retrieval (Hacker News + Tavily Search implemented)
 5. **Presentation Layer**: Build presenter.render() with markdown cards and collapsible expanders
 6. **Static Data**: Create data/static_samples.json with sample content for fallback
 7. **10-Section Generation**: Real agent now generates exactly 10 sections with need/nice balance
@@ -116,7 +120,7 @@ Always implement: **Live Data → Static Samples**
 
 ## Planned Features
 ### 🎯 High Priority
-- **Additional Data Sources**: Expand beyond Hacker News to include Wikipedia, quotes, and other news sources
+- **Additional Data Sources**: Expand beyond Hacker News and Tavily Search to include Wikipedia, quotes, and other news sources
 
 ### 🔄 Medium Priority  
 - **Enhanced Processing**: More sophisticated content analysis and categorization algorithms
@@ -127,7 +131,7 @@ Always implement: **Live Data → Static Samples**
 - Must show: pick preferences → show "Agent plan" → 10 interleaved sections (need/nice) → regenerate
 - Fast and reliable: prefer **cached/mocked** data if scraping/LLM is slow
 - 3-minute screen recording capability
-- Currently demonstrates: Hacker News live data → 10-section digest with agent thinking log → AI voiceover
+- Currently demonstrates: Hacker News + Tavily Search live data → 10-section digest with agent thinking log → AI voiceover
 - Demo flow: Generate digest → Generate voiceover → Listen to AI-hosted morning digest
 - Audio files stored in: app/voiceover/generated/ directory
 

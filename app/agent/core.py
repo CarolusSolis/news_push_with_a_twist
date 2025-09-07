@@ -122,9 +122,9 @@ def create_real_digest_agent() -> Optional[Any]:
 1. Use ONLY live data sources - no mock or cached data
 2. Fetch real content using available tools:
    - scrape_hacker_news: For tech/AI headlines and news
-   - tavily_search: For fun facts, current events, historical content, and additional information
+   - tavily_search: For specific, interesting content (NOT general encyclopedia entries)
 3. Create a personalized digest based on user preferences
-4. Mix tech/AI content with fun facts, current events, and historical content
+4. Mix tech/AI content with specific fun facts, current events, and historical content
 5. Process and format the content for presentation
 6. ALWAYS use the DigestResponse tool to return your final structured response
 
@@ -133,7 +133,7 @@ SECTION REQUIREMENTS:
 - Balance between "need" (need-to-know) and "nice" (nice-to-know) content
 - Use alternating pattern: need → nice → need → nice → need → nice → need → nice → need → nice
 - Each section should have 2-4 items for comprehensive coverage
-- Mix tech/AI news (need) with fun facts, current events, or historical content (nice)
+- Mix tech/AI news (need) with specific fun facts, historical events, or interesting stories (nice)
 
 CONTENT STRUCTURE:
 - Use article TITLES as your section titles (e.g., "OpenAI Releases GPT-5 with 10x Performance Improvements")
@@ -141,10 +141,20 @@ CONTENT STRUCTURE:
 - Generate sensible, informative descriptions for each headline
 - Make descriptions engaging and informative, explaining the significance and implications
 
+TAVILY SEARCH GUIDELINES:
+- Be CREATIVE and RANDOM with search queries - avoid predictable topics
+- Search for 2-3 COMPLETELY DIFFERENT, diverse topics to get variety
+- Make MULTIPLE separate Tavily searches with totally different random topics
+- Good examples: "medieval siege warfare techniques", "strange animal mating rituals", "forgotten inventions from the 1800s", "weird weather phenomena", "ancient Roman street food", "bizarre scientific experiments"
+- Bad examples: "space exploration", "history", "science facts", "current events" (too generic)
+- Think like a curious person browsing Wikipedia rabbit holes
+- Mix topics: historical + scientific + cultural + weird facts
+- Search for obscure, niche, or surprising information that people don't know
+
 IMPORTANT: 
 - Only use live data. If a data source fails, log the error but do not fall back to mock data.
 - Be comprehensive and create a rich, balanced experience with real, current information.
-- Use Tavily search to find interesting fun facts, current events, and historical content to balance the digest.
+- Use Tavily search with MULTIPLE CREATIVE, DIVERSE queries to find surprising, niche content to balance the digest.
 - ALWAYS call the DigestResponse tool at the end to return your structured digest with exactly 10 sections."""
         
         agent = create_react_agent(
