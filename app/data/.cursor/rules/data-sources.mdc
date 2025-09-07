@@ -1,0 +1,49 @@
+---
+description: Data sources, implementation status, and planned features
+globs: ["**/agent/tools/**/*.py", "**/data/**/*.json"]
+alwaysApply: false
+---
+
+# Data Sources & Implementation Status
+
+## Currently Implemented (Live Data)
+- **Hacker News** (front page) → "Quick Hits" tech/AI headlines (✅ LIVE)
+  - Note: Hacker News items don't have descriptions, so AI generates sensible placeholder descriptions
+- **Tavily Search** → Creative, random fun facts and niche content (✅ LIVE)
+  - Uses multiple diverse, creative search queries for surprising content
+  - Avoids generic topics in favor of obscure, interesting, and weird facts
+  - Searches for 2-3 completely different random topics per digest
+
+## Planned for Future Implementation
+- **Wikipedia – Selected anniversaries** → "Did You Know" history bits (📋 PLANNED)
+- **quotes.toscrape.com** → "Quote / Fun Spark" (📋 PLANNED)
+- **Additional news sources** for broader coverage (📋 PLANNED)
+
+## Implementation Status
+### ✅ Completed
+1. **MVP Foundation**: app.py skeleton with sidebar prefs, Generate button, Agent Log expander
+2. **Agent System**: Real agent with live data + Mock agent fallback
+3. **Structured Output**: Pydantic schemas with tool calling for consistent parsing
+4. **Tool Integration**: LangChain tools for data retrieval (Hacker News + Tavily Search implemented)
+5. **Presentation Layer**: Build presenter.render() with markdown cards and collapsible expanders
+6. **Static Data**: Create data/static_samples.json with sample content for fallback
+7. **10-Section Generation**: Real agent now generates exactly 10 sections with need/nice balance
+8. **User Agent Toggle**: UI control to switch between real and mock agents
+9. **AI Voiceover System**: Complete TTS integration with script generation and audio playback
+10. **Title/Description Structure**: Proper section titles as headlines with item text as descriptions
+11. **Audio Player Integration**: Working audio playback with file storage in voiceover/generated/
+
+### 📋 Next Steps
+1. **Additional Live Data Sources**: Wikipedia anniversaries, quotes.toscrape.com
+2. **Enhanced Content Processing**: More sophisticated content analysis and categorization
+3. **User Preferences**: More granular control over content types and sources
+4. **Voice Customization**: More voice options and speech rate controls
+
+## Planned Features
+### 🎯 High Priority
+- **Additional Data Sources**: Expand beyond Hacker News and Tavily Search to include Wikipedia, quotes, and other news sources
+
+### 🔄 Medium Priority  
+- **Enhanced Processing**: More sophisticated content analysis and categorization algorithms
+- **Advanced Preferences**: Granular user control over content types, sources, and presentation
+- **Voice Customization**: More voice options, speech rate controls, and audio quality settings

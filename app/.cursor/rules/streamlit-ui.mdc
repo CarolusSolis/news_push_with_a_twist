@@ -1,0 +1,36 @@
+---
+description: Streamlit UI patterns, components, and user experience guidelines
+globs: ["**/app.py", "**/presenter.py", "**/prefs.py"]
+alwaysApply: false
+---
+
+# Streamlit UI & User Experience
+
+## UI Components
+- **Sidebar**: User preferences, agent toggle, voice selection
+- **Main Area**: Digest display with collapsible sections
+- **Agent Log**: Expandable section showing agent decision-making
+- **Audio Player**: Native Streamlit audio component for voiceover playback
+
+## User Flow Patterns
+1. **Generate Digest**: Pick preferences → Show "Agent plan" → 10 interleaved sections (need/nice) → regenerate
+2. **Voiceover Flow**: Generate digest → Generate voiceover → Listen to AI-hosted morning digest
+3. **Agent Toggle**: Switch between real agent (live data) and mock agent (fallback)
+
+## Streamlit Best Practices
+- Use `@st.cache_data(ttl=600)` for network calls
+- Implement proper error handling to keep UI responsive
+- Use session state for user preferences persistence
+- Provide clear loading states and progress indicators
+
+## Component Structure
+- **Markdown Cards**: For digest sections with proper formatting
+- **Collapsible Expanders**: For detailed content and agent logs
+- **Audio Player**: Native Streamlit audio component
+- **Sidebar Controls**: Preferences, toggles, and settings
+
+## Error Handling
+- Never crash the app - always provide fallback content
+- Show user-friendly error messages
+- Log errors to agent thinking log for debugging
+- Graceful degradation when external services fail

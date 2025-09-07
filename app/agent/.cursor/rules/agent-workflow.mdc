@@ -1,0 +1,35 @@
+---
+description: Agent behavior, workflow rules, and decision-making logic
+globs: ["**/agent/**/*.py"]
+alwaysApply: false
+---
+
+# Agentic Workflow Rules
+
+## Core Workflow Rules
+1. **Planning**: If topics include AI/History/Politics → select `quick_hits`, `deep_dive` (need)
+2. **Always include** one `nice` block (`quote` or `fun_spark`)
+3. **Interleave pattern**: need → nice → need (10 sections)
+4. **Item Descriptions**: Use items' text as descriptions; for Hacker News items without descriptions, generate sensible AI placeholder descriptions
+5. **Log all decisions** to "Agent Thinking Log"
+6. **Observability**: Every step appends concise log: `[Planner] chose X`, `[Retriever] cache hit for HN`
+
+## Agent Behavior
+- **Real Agent**: Uses live data sources (Hacker News + Tavily Search) with structured Pydantic output
+- **Mock Agent**: Fallback agent using static/cached data for reliability
+- **Structured Output**: All agents return `DigestResponse` schema with exactly 10 sections
+- **Tool Integration**: LangChain tools for data retrieval and content processing
+- **Fallback Chain**: Real Agent → Mock Agent → Static Samples
+
+## Content Generation Rules
+- Generate exactly 10 sections with need/nice balance
+- Use interleaving pattern: need → nice → need
+- Include proper section titles as headlines with item text as descriptions
+- For Hacker News items without descriptions, generate sensible AI placeholder descriptions
+- Always include at least one "nice" block (quote or fun_spark)
+
+## Logging & Observability
+- Log all agent decisions to "Agent Thinking Log"
+- Every step appends concise log entries
+- Track planning decisions, retrieval results, and fallback reasons
+- Maintain transparency in agent decision-making process

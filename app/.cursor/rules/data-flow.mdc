@@ -1,0 +1,44 @@
+---
+description: Application data flow, state management, and user preferences
+globs: ["**/app.py", "**/prefs.py", "**/presenter.py"]
+alwaysApply: false
+---
+
+# Application Data Flow & State Management
+
+## Data Flow Architecture
+```
+User Prefs → Agent System (Real/Mock) → Structured Output → Presenter.render()
+                    ↓
+              Agent Log (tracks all decisions)
+```
+
+## State Management
+- **User Preferences**: Stored in session state and JSON file
+- **Agent Log**: In-memory logging of all agent decisions
+- **Generated Content**: Cached digest responses with TTL
+- **Audio Files**: Persistent storage in `voiceover/generated/`
+
+## User Preferences
+- **Content Topics**: AI/History/Politics selection
+- **Agent Type**: Real vs Mock agent toggle
+- **Voice Selection**: TTS voice preference (Alloy, Echo, Fable, Onyx, Nova, Shimmer)
+- **Display Options**: Section visibility and formatting
+
+## Caching Strategy
+- **Network Calls**: `@st.cache_data(ttl=600)` for external API calls
+- **Agent Responses**: Cache digest generation results
+- **Static Content**: Fallback to `data/static_samples.json`
+- **Audio Files**: Persistent storage with UUID naming
+
+## Error Recovery
+- **Fallback Chain**: Real Agent → Mock Agent → Static Samples
+- **Partial Failures**: Regenerate only failed sections, not whole page
+- **Service Timeouts**: 3-second timeout for scraping, then fallback
+- **User Experience**: Always show something, never blank screen
+
+## Data Persistence
+- **Preferences**: JSON file + session state
+- **Generated Audio**: Files in `voiceover/generated/` directory
+- **Agent Logs**: In-memory during session
+- **Cache**: Streamlit's built-in caching for performance

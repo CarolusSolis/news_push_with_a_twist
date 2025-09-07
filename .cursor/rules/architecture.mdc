@@ -1,0 +1,47 @@
+---
+description: System architecture, data flow, and module responsibilities
+globs: ["**/app.py", "**/agent/**/*.py", "**/presenter.py", "**/prefs.py"]
+alwaysApply: true
+---
+
+# System Architecture & Data Flow
+
+## Core Architecture
+```
+User Prefs → Agent System (Real/Mock) → Structured Output → Presenter.render()
+                    ↓
+              Agent Log (tracks all decisions)
+```
+
+## Module Responsibilities
+- **app.py**: Streamlit UI + wiring + Agent Log display
+- **agent/core.py**: Real agent (live data) + Mock agent (fallback) + structured output
+- **agent/tools/**: LangChain tools for data retrieval and content processing
+- **presenter.py**: Pure rendering helpers (no business logic)
+- **prefs.py**: Load/save user preferences (JSON / session_state)
+- **data/static_samples.json**: Fallback content for demo resilience
+
+## Section Contract
+Each section is a dict:
+```python
+{
+  "id": "quick_hits" | "deep_dive" | "did_you_know" | "fun_spark" | "quote",
+  "title": "📌 OpenAI Releases GPT-5 with 10x Performance Improvements",
+  "kind": "need" | "nice",
+  "items": [{"text": "The new model shows significant advances in reasoning, coding, and multimodal capabilities while reducing compute costs.", "url": optional}]
+}
+```
+
+## Agent Architecture
+- **Real Agent**: Uses live data sources (Hacker News + Tavily Search) with structured Pydantic output
+- **Mock Agent**: Fallback agent using static/cached data for reliability
+- **Structured Output**: All agents return `DigestResponse` schema with exactly 10 sections
+- **Tool Integration**: LangChain tools for data retrieval and content processing
+- **Fallback Chain**: Real Agent → Mock Agent → Static Samples
+- **Current Live Tools**: `scrape_hacker_news`, `tavily_search` (more tools planned for future releases)
+
+## Fallback Strategy
+Always implement: **Live Data → Static Samples**
+- Log failures and switch reasons
+- Keep UI responsive, never crash app
+- Regenerate only failed sections, not whole page

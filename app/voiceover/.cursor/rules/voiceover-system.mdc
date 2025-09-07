@@ -1,0 +1,31 @@
+---
+description: AI voiceover system architecture and user flow
+globs: ["**/voiceover/**/*.py", "**/app.py"]
+alwaysApply: false
+---
+
+# AI Voiceover System
+
+## Architecture
+- **Script Generation**: GPT-4o converts digest sections into engaging voiceover scripts
+- **Text-to-Speech**: OpenAI TTS API with 6 voice options (Alloy, Echo, Fable, Onyx, Nova, Shimmer)
+- **Audio Storage**: Files saved to `app/voiceover/generated/` with unique UUID names
+- **Audio Player**: Streamlit native audio player with file path serving
+
+## User Flow
+1. Generate digest → Click "🎙️ Generate Voiceover" → AI creates script → TTS generates audio → Play in browser
+2. Voice selection in sidebar preferences
+3. Script viewable in expandable section
+4. Audio files persist in generated/ directory
+
+## Implementation Details
+- Audio files stored in: `app/voiceover/generated/` directory
+- Unique UUID naming for audio files
+- Script generation using GPT-4o for engaging content
+- Integration with Streamlit native audio player
+- Voice customization through sidebar preferences
+
+## Current Status
+- ✅ IMPLEMENTED: Complete TTS integration with script generation and audio playback
+- ✅ IMPLEMENTED: Working audio playback with file storage in voiceover/generated/
+- ✅ IMPLEMENTED: Audio Player Integration with Streamlit native audio player

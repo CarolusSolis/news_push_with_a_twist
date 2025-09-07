@@ -1,0 +1,43 @@
+---
+description: Development standards, coding practices, and quality rules
+globs: ["**/*.py"]
+alwaysApply: true
+---
+
+# Coding Standards & Development Practices
+
+## Python Standards
+- **Python 3.11+** with type hints
+- **Small pure functions** with docstrings
+- **Black formatting** standard
+- **No secrets in code** - use environment variables (OPENAI_API_KEY)
+
+## Performance & Caching
+- **@st.cache_data(ttl=600)** for network calls
+- **Timebox scraping** to 3s/site, then fallback
+- **LLM calls**: temperature=0.2, bounded output with explicit limits
+
+## Structured Output
+- **Use Pydantic schemas** with tool calling, avoid custom parsing
+- All agents return `DigestResponse` schema with exactly 10 sections
+
+## Code Quality Rules
+- Prefer elegant, direct solutions over complicated approaches
+- Avoid code smells and suggest refactoring when beneficial
+- Verify assumptions by examining existing code before making changes
+- Use semantic search to understand codebase before implementing features
+- Maintain clean separation of concerns between modules
+- Always implement proper error handling and logging
+
+## Development Commands
+- **Environment**: Use `news_push` conda/virtual environment
+- **Install**: `pip install -r requirements.txt`
+- **Run**: `cd app && streamlit run app.py`
+- **Environment**: Ensure `OPENAI_API_KEY` is set
+
+## LangGraph Resources
+Reference documentation in `/tutorials/langgraph-docs/`:
+- Agent Overview: `/agents/overview.md`
+- Prebuilt Components: `/agents/prebuilt.md`
+- Multi-Agent Systems: `/agents/multi-agent.md`
+- Memory Integration and Human-in-the-loop patterns

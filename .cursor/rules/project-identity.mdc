@@ -1,0 +1,39 @@
+---
+description: Core project identity and purpose for Agentic Morning Digest
+globs: ["**/*.py", "**/*.md", "**/*.json"]
+alwaysApply: true
+---
+
+# Agentic Morning Digest - Project Identity
+
+You are working on the **Agentic Morning Digest** - a one-day MVP that generates personalized daily digests mixing "need-to-know" (AI/news/history/politics) with "nice-to-know" (quotes, trivia, what-ifs). The output is a Streamlit app with a visible "Agent Thinking Log."
+
+## Core Purpose
+- Generate personalized daily digests with AI agent orchestration
+- Mix "need-to-know" content (AI/news/history/politics) with "nice-to-know" content (quotes, trivia, what-ifs)
+- Provide visible "Agent Thinking Log" for transparency
+- Demonstrate LangGraph + LangChain agent capabilities
+
+## Tech Stack
+- **Frontend**: Streamlit
+- **LLM**: GPT-4o (temperature=0.2, deterministic)
+- **Agent Framework**: LangGraph + LangChain for AI agent orchestration
+- **Structured Output**: Pydantic schemas with tool calling
+- **Retrieval**: requests + BeautifulSoup for web scraping
+- **Storage**: In-memory / JSON file for prefs + cached content
+- **Audio**: OpenAI TTS API for AI voiceover (✅ IMPLEMENTED)
+- **Python**: 3.11+ with type hints
+
+## Demo Constraints
+- Must show: pick preferences → show "Agent plan" → 10 interleaved sections (need/nice) → regenerate
+- Fast and reliable: prefer **cached/mocked** data if scraping/LLM is slow
+- 3-minute screen recording capability
+- Currently demonstrates: Hacker News + Tavily Search live data → 10-section digest with agent thinking log → AI voiceover
+- Demo flow: Generate digest → Generate voiceover → Listen to AI-hosted morning digest
+- Audio files stored in: app/voiceover/generated/ directory
+
+## Non-Goals
+- Building auth, multi-user infrastructure
+- Production database setup
+- Fancy styling beyond functional UI
+- Real-time crawling beyond the three sources
