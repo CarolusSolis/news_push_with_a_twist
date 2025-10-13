@@ -2,6 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## IMPORTANT: Maintaining Context Files
+
+**This project uses hierarchical CLAUDE.md files for different modules:**
+
+- `/CLAUDE.md` (this file): High-level architecture, mission, environment setup
+- `/tests/CLAUDE.md`: Testing philosophy, running tests, test structure
+- `/app/agent/CLAUDE.md`: Agent architecture, tools, system prompts
+- `/app/voiceover/CLAUDE.md`: Voiceover generation, TTS, script logic
+
+**When making changes:**
+1. Update the relevant CLAUDE.md file (not just code)
+2. Keep hierarchy clear - no duplication between levels
+3. Main CLAUDE.md = high-level, subdirectory CLAUDE.md = implementation details
+4. If architecture changes, update MULTIPLE CLAUDE.md files as needed
+5. Keep context files concise, relevant, and organized
+
 ## 0) Identity & Mission
 You are the **Agentic Morning Digest** dev assistant. Goal: ship a one-day MVP that generates a **personalized daily digest** mixing “need-to-know” (AI/news/history/politics) with “nice-to-know” (quotes, trivia, what-ifs). Output lives in a **Streamlit** app with a visible “Agent Thinking Log.”
 
@@ -10,9 +26,10 @@ You are the **Agentic Morning Digest** dev assistant. Goal: ship a one-day MVP t
 ## 1) Commands
 
 ### Development
-- **Environment:** Use the `news_push` conda/virtual environment
+- **Environment:** Use the `news_push` conda environment: `conda activate news_push`
 - **Install dependencies:** `pip install -r requirements.txt`
 - **Run the application:** `cd app && streamlit run app.py`
+- **Run tests:** `pytest` (see `/tests/CLAUDE.md` for details)
 - **Environment setup:** Ensure `OPENAI_API_KEY` and `TAVILY_API_KEY` are set in `.env` file
 
 ### Demo Constraints (3-minute screen recording)
@@ -98,30 +115,21 @@ Sections are defined using Pydantic models in `app/agent/core.py`:
 }
 ```
 
-## 6) Agentic Workflow (Current Implementation)
+## 6) Agentic Workflow (High-Level)
 1. **Collect prefs** (topics, mood, time budget) in sidebar via `prefs.py`
-2. **LangGraph Agent Execution** (`agent/core.py`)
-   - Agent receives user preferences via `analyze_user_preferences` tool
+2. **LangGraph Agent Execution** (see `/app/agent/CLAUDE.md` for details)
    - Agent autonomously decides which tools to call and in what order
-   - Available tools:
-     - `analyze_user_preferences`: Parse user preferences
-     - `fetch_content_by_type`: Retrieve content from HackerNews or static samples
-     - `process_content_item`: LLM-based content processing and summarization
-     - `scrape_hacker_news`: Direct HackerNews scraping
-     - `tavily_search`: Web search for specific, interesting content (if TAVILY_API_KEY available)
    - Agent constructs sections following pattern: **need → nice → need** (max 3–4 sections)
    - All tool calls logged to "Agent Thinking Log"
 3. **Structured Output Generation**
-   - Agent returns `DigestResponse` with properly structured sections
-   - Automatic validation via Pydantic models
+   - Agent returns `DigestResponse` with Pydantic-validated sections
 4. **Presenter.render(sections)**
    - Pure formatting; badges for need/nice; collapsible expanders
-5. **Optional Voiceover Generation**
+5. **Optional Voiceover Generation** (see `/app/voiceover/CLAUDE.md` for details)
    - Generate TTS-friendly script from digest content
    - Convert to audio using OpenAI TTS
 6. **Observability**
    - Agent tool calls automatically logged
-   - Custom logging via `AgentLogger` class in `core.py`
 
 ## 7) Coding Standards & Safety
 - Python 3.11+, type hints, small pure functions, docstrings, `black` format
@@ -131,46 +139,39 @@ Sections are defined using Pydantic models in `app/agent/core.py`:
 - LLM: GPT-4o (`gpt-4o`) with `temperature=0` for deterministic output
 - Structured output using Pydantic models and `.with_structured_output()`
 
-## 8) Agent System Prompt
-The LangGraph agent uses a comprehensive system prompt (defined in `agent/core.py`) that includes:
+## 8) Agent System & Testing
 
-1. **Role & Purpose**: Morning digest creator mixing need-to-know and nice-to-know content
-2. **Section Types**: Definitions for `quick_hits`, `deep_dive`, `did_you_know`, `fun_spark`, `quote`
-3. **Tool Usage Guidelines**:
-   - `analyze_user_preferences`: Always call first to understand user preferences
-   - `scrape_hacker_news`: For tech/AI/startup news
-   - `tavily_search`: For specific, interesting content (NOT general encyclopedia entries)
-   - `fetch_content_by_type`: Fallback for static samples
-   - `process_content_item`: For summaries and transformations
-4. **Content Rules**:
-   - Interleave pattern: need → nice → need (3-4 sections max)
-   - One-sentence summaries (≤25 words)
-   - Include "why it matters" context
-   - Playful but tasteful "what-if" scenarios
-5. **Output Format**: Structured `DigestResponse` with proper section structure
+### Agent System
+The LangGraph ReAct agent autonomously orchestrates digest generation. See `/app/agent/CLAUDE.md` for:
+- System prompt structure
+- Available tools and when to use them
+- Adding new tools
+- Agent debugging
+
+### Testing
+Backend and frontend are fully tested with pytest. See `/tests/CLAUDE.md` for:
+- Running tests
+- Writing new tests
+- Coverage reporting
+- Testing best practices
 
 ## 9) Implementation Status
 **✅ Completed:**
-1. **Streamlit UI**: `app.py` with sidebar prefs, Generate button, Agent Log display
-2. **Static Fallback Data**: `data/static_samples.json` with sample content
-3. **LangGraph Agent**: ReAct agent with tool orchestration in `agent/core.py`
-4. **Agent Tools**:
-   - User preference analysis
-   - HackerNews scraper
-   - Content processing (LLM-based)
-   - Tavily search integration
-   - Fallback content retrieval
-5. **Presentation Layer**: `presenter.py` with markdown cards and collapsible expanders
-6. **Voiceover System**: Script generation + OpenAI TTS integration
+1. **Streamlit UI**: Clean separation between UI (`app.py`) and business logic (`services.py`)
+2. **Backend Services**: `DigestService` and `VoiceoverService` for testable business logic
+3. **LangGraph Agent**: ReAct agent with autonomous tool orchestration (see `/app/agent/CLAUDE.md`)
+4. **Agent Tools**: HackerNews scraping, Tavily search, content processing, user preference analysis
+5. **Voiceover System**: TTS script generation + OpenAI audio (see `/app/voiceover/CLAUDE.md`)
+6. **Testing Suite**: 37+ unit and integration tests with pytest (see `/tests/CLAUDE.md`)
 7. **Structured Output**: Pydantic models with automatic validation
 
 **🔄 Current Features:**
 - Personalized digest generation based on user preferences
 - Autonomous agent decision-making via LangGraph
-- Real-time HackerNews scraping
-- Intelligent web search via Tavily
+- Real-time HackerNews scraping + Tavily search
 - Audio digest generation with voiceover
 - Agent thinking log for transparency
+- Comprehensive test coverage
 
 ## 10) Failure & Fallback Policy
 The application implements graceful degradation:
