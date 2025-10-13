@@ -13,7 +13,7 @@ You are the **Agentic Morning Digest** dev assistant. Goal: ship a one-day MVP t
 - **Environment:** Use the `news_push` conda/virtual environment
 - **Install dependencies:** `pip install -r requirements.txt`
 - **Run the application:** `cd app && streamlit run app.py`
-- **Environment setup:** Ensure `OPENAI_API_KEY` is set in environment (for future LLM integration)
+- **Environment setup:** Ensure `OPENAI_API_KEY` and `TAVILY_API_KEY` are set in `.env` file
 
 ### Demo Constraints (3-minute screen recording)
 - Must show: pick preferences → show "Agent plan" → interleaved sections (need/nice) → regenerate.
@@ -22,9 +22,11 @@ You are the **Agentic Morning Digest** dev assistant. Goal: ship a one-day MVP t
 ## 2) Tech Stack (MVP)
 - **Frontend:** Streamlit
 - **LLM:** GPT (for summaries/reframes); keep calls minimal and deterministic (temperature low)
-- **Agent Framework:** LangGraph for AI agent orchestration (see tutorials in `/tutorials/langgraph-docs/`)
-- **Retrieval:** Playwright (JS sites) + BeautifulSoup (parse). Provide **mock switch** + **cache**
+- **Agent Framework:** LangGraph ReAct agent for AI agent orchestration (see tutorials in `/tutorials/langgraph-docs/`)
+- **Search:** Tavily API for intelligent web search
+- **Retrieval:** BeautifulSoup + requests for web scraping
 - **Storage:** In-memory / JSON file for prefs + cached content
+- **Voiceover:** OpenAI TTS for audio generation
 
 ### LangGraph Resources
 Reference documentation in `/tutorials/langgraph-docs/`:
@@ -34,94 +36,160 @@ Reference documentation in `/tutorials/langgraph-docs/`:
 - **Memory Integration:** How-to guides for session and persistent memory
 - **Human-in-the-loop:** Patterns for interactive agent workflows
 
-## 3) Sources (start with 3)
-- **Hacker News** (front page) → “Quick Hits” tech/AI headlines  
-- **Wikipedia – Selected anniversaries / On This Day** → “Did You Know” history bits  
-- **quotes.toscrape.com** → “Quote / Fun Spark”  
-Add RSS/API later only if time allows.
+## 3) Sources
+- **Hacker News** (front page) → "Quick Hits" tech/AI headlines (via custom scraper)
+- **Tavily Search** → Intelligent web search for specific, interesting content
+- **Static samples** → Fallback content in `data/static_samples.json`
 
 ## 4) Architecture & Code Structure
 
 ### Core Architecture
-The application follows a modular pipeline architecture:
-1. **Preferences Collection** → **Planning** → **Content Retrieval** → **Content Processing** → **Presentation**
-2. **Agent Thinking Log** runs parallel to track all decisions and actions
-3. **Fallback Strategy** ensures resilience: Live Data → Cache → Static Samples
+The application uses a **LangGraph ReAct agent** architecture:
+1. **Preferences Collection** → **Agent Planning & Tool Execution** → **Content Retrieval** → **Structured Output** → **Presentation**
+2. **Agent Thinking Log** tracks all tool calls and decisions
+3. **Fallback Strategy** ensures resilience: Static Samples available in `data/static_samples.json`
 
 ### Module Responsibilities
-- **app.py**: Streamlit UI + wiring + Agent Log display
-- **manager.py**: Plans sections & order (need/nice interleave) + decision logging  
-- **retriever.py**: Scraping (HN/Wiki/Quotes) + cache + USE_LIVE flag + fallback logic
-- **editors.py**: NeedToKnow / NiceToKnow content transformers + LLM calls
-- **presenter.py**: Pure rendering helpers (no business logic)
-- **prefs.py**: Load/save user preferences (JSON / session_state)
-- **data/static_samples.json**: Fallback content for demo resilience
+- **app/app.py**: Streamlit UI, session state management, voiceover integration
+- **app/agent/core.py**: LangGraph ReAct agent orchestration, tool coordination, structured output generation
+- **app/agent/tools/**: Agent tools (retrieval, content processing, HackerNews scraping, user preference analysis)
+  - **hacker_news.py**: HackerNews scraper with BeautifulSoup
+  - **retrieval_tools.py**: `fetch_content_by_type` tool for content retrieval
+  - **content_tools.py**: `process_content_item` for LLM-based content processing
+- **app/presenter.py**: Pure rendering helpers (no business logic)
+- **app/prefs.py**: User preference collection UI and state management
+- **app/voiceover/**: Audio digest generation
+  - **script_generator.py**: Generate TTS-friendly scripts from digest content
+  - **tts_engine.py**: OpenAI TTS integration for audio generation
+- **app/data/static_samples.json**: Fallback content for demo resilience
 
 ### Data Flow
 ```
-User Prefs → Manager.plan_sections() → Retriever.fetch_*() → Editors.transform() → Presenter.render()
-                    ↓
-              Agent Log (tracks all decisions)
+User Prefs → LangGraph Agent (with tools) → Structured DigestResponse → Presenter.render()
+                    ↓                                      ↓
+              Agent Log (tool calls)              Optional: Voiceover generation
 ```
 
-## 5) Section Contract
-Each section is a dict:
-{
-  "id": "quick_hits" | "deep_dive" | "did_you_know" | "fun_spark" | "quote",
-  "title": "📌 Quick Hits You Should Know",
-  "kind": "need" | "nice",
-  "items": [{"text": "...", "url": optional}]
-}
+## 5) Section Contract (Pydantic Models)
+Sections are defined using Pydantic models in `app/agent/core.py`:
 
-## 6) Agentic Workflow (what to implement)
-1. **Collect prefs** (topics, mood, time budget) in sidebar.  
-2. **Manager.plan_sections(prefs)**  
-   - Rules: if topics include AI/History/Politics → select `quick_hits`, `deep_dive` (need)  
-   - Always include one `nice` block (`quote` or `fun_spark`)  
-   - Interleave pattern: **need → nice → need** (max 3–4 sections)  
-   - Log decisions to “Agent Thinking Log”.
-3. **Retriever.fetch_*()**  
-   - Try cached; if `USE_LIVE=True`, scrape via Playwright; else use `data/static_samples.json`.  
-   - Parse with BeautifulSoup; return minimal clean fields.  
-   - On failure, **fallback** to cache/static and log reason.
-4. **Editors**  
-   - `need_to_know(sec, data)`: one-sentence bullets; optional 1-paragraph “Deep Dive” (LLM-summarize a single item).  
-   - `nice_to_know(sec, data)`: quote or playful what-if; deterministic prompt; no external calls if possible.
-5. **Presenter.render(sections)**  
-   - Pure formatting; add badges for need/nice; collapsible expanders.  
-6. **Observability**  
-   - Every step appends a concise log line: `[Planner] chose X`, `[Retriever] cache hit for HN`, etc.
+**DigestItem:**
+```python
+{
+  "text": str,        # Main content text
+  "url": str          # Optional URL (default: "")
+}
+```
+
+**DigestSection:**
+```python
+{
+  "id": str,          # e.g., "quick_hits", "deep_dive", "did_you_know", "fun_spark", "quote"
+  "title": str,       # e.g., "📌 Quick Hits You Should Know"
+  "kind": str,        # "need" or "nice"
+  "items": List[DigestItem]
+}
+```
+
+**DigestResponse:**
+```python
+{
+  "sections": List[DigestSection]
+}
+```
+
+## 6) Agentic Workflow (Current Implementation)
+1. **Collect prefs** (topics, mood, time budget) in sidebar via `prefs.py`
+2. **LangGraph Agent Execution** (`agent/core.py`)
+   - Agent receives user preferences via `analyze_user_preferences` tool
+   - Agent autonomously decides which tools to call and in what order
+   - Available tools:
+     - `analyze_user_preferences`: Parse user preferences
+     - `fetch_content_by_type`: Retrieve content from HackerNews or static samples
+     - `process_content_item`: LLM-based content processing and summarization
+     - `scrape_hacker_news`: Direct HackerNews scraping
+     - `tavily_search`: Web search for specific, interesting content (if TAVILY_API_KEY available)
+   - Agent constructs sections following pattern: **need → nice → need** (max 3–4 sections)
+   - All tool calls logged to "Agent Thinking Log"
+3. **Structured Output Generation**
+   - Agent returns `DigestResponse` with properly structured sections
+   - Automatic validation via Pydantic models
+4. **Presenter.render(sections)**
+   - Pure formatting; badges for need/nice; collapsible expanders
+5. **Optional Voiceover Generation**
+   - Generate TTS-friendly script from digest content
+   - Convert to audio using OpenAI TTS
+6. **Observability**
+   - Agent tool calls automatically logged
+   - Custom logging via `AgentLogger` class in `core.py`
 
 ## 7) Coding Standards & Safety
-- Python 3.11+, type hints, small pure functions, docstrings, `black` format.
-- **No secrets in code**. Expect `OPENAI_API_KEY` via env.  
-- Use `@st.cache_data(ttl=600)` for network calls.  
-- Timebox scraping to 3s/site; then fallback.  
-- LLM: `temperature=0.2`, bounded output via explicit bullet/char limits.
+- Python 3.11+, type hints, small pure functions, docstrings, `black` format
+- **No secrets in code**. Store `OPENAI_API_KEY` and `TAVILY_API_KEY` in `.env` file
+- Load environment variables using `python-dotenv`
+- Use `@st.cache_data(ttl=600)` for network calls
+- LLM: GPT-4o (`gpt-4o`) with `temperature=0` for deterministic output
+- Structured output using Pydantic models and `.with_structured_output()`
 
-## 8) Prompts (edit as needed)
-**Planner prompt (system):**  
-“You plan a 3–4 section morning digest mixing *need-to-know* (news/deep-dive) and *nice-to-know* (quote/what-if). Given {topics, mood, time_budget}, choose section IDs from: [`quick_hits`, `deep_dive`, `did_you_know`, `quote`, `fun_spark`]. Return JSON: `{order:[...], rationale:[...]}`. Prefer pattern need→nice→need.”
+## 8) Agent System Prompt
+The LangGraph agent uses a comprehensive system prompt (defined in `agent/core.py`) that includes:
 
-**Need summary prompt (user):**  
-“Summarize this headline+snippet for a daily digest. 1 sentence, ≤25 words, neutral, add why it matters. Input:\n{headline}\n{snippet}”
+1. **Role & Purpose**: Morning digest creator mixing need-to-know and nice-to-know content
+2. **Section Types**: Definitions for `quick_hits`, `deep_dive`, `did_you_know`, `fun_spark`, `quote`
+3. **Tool Usage Guidelines**:
+   - `analyze_user_preferences`: Always call first to understand user preferences
+   - `scrape_hacker_news`: For tech/AI/startup news
+   - `tavily_search`: For specific, interesting content (NOT general encyclopedia entries)
+   - `fetch_content_by_type`: Fallback for static samples
+   - `process_content_item`: For summaries and transformations
+4. **Content Rules**:
+   - Interleave pattern: need → nice → need (3-4 sections max)
+   - One-sentence summaries (≤25 words)
+   - Include "why it matters" context
+   - Playful but tasteful "what-if" scenarios
+5. **Output Format**: Structured `DigestResponse` with proper section structure
 
-**Fun spark prompt (user):**  
-“Write one playful ‘what-if’ (≤25 words) connecting {topic} to history/politics. Keep it tasteful, no speculation about real people’s private lives.”
+## 9) Implementation Status
+**✅ Completed:**
+1. **Streamlit UI**: `app.py` with sidebar prefs, Generate button, Agent Log display
+2. **Static Fallback Data**: `data/static_samples.json` with sample content
+3. **LangGraph Agent**: ReAct agent with tool orchestration in `agent/core.py`
+4. **Agent Tools**:
+   - User preference analysis
+   - HackerNews scraper
+   - Content processing (LLM-based)
+   - Tavily search integration
+   - Fallback content retrieval
+5. **Presentation Layer**: `presenter.py` with markdown cards and collapsible expanders
+6. **Voiceover System**: Script generation + OpenAI TTS integration
+7. **Structured Output**: Pydantic models with automatic validation
 
-## 9) Implementation Priority
-**Build in this order to maintain demo readiness:**
-1. **MVP Foundation**: `app.py` skeleton with sidebar prefs, Generate button, Agent Log expander
-2. **Static Data**: Create `data/static_samples.json` with sample content from all sources
-3. **Planning Logic**: Implement `manager.plan_sections()` with decision rules and logging
-4. **Presentation Layer**: Build `presenter.render()` with markdown cards and collapsible expanders
-5. **Content Pipeline**: Implement `retriever.py` cache + mock + optional live scraping
-6. **LLM Integration**: Add minimal LLM calls for "Deep Dive" summaries only
-
-**Critical Path**: Steps 1-4 create a working demo. Steps 5-6 add real functionality.
+**🔄 Current Features:**
+- Personalized digest generation based on user preferences
+- Autonomous agent decision-making via LangGraph
+- Real-time HackerNews scraping
+- Intelligent web search via Tavily
+- Audio digest generation with voiceover
+- Agent thinking log for transparency
 
 ## 10) Failure & Fallback Policy
-If any scraper/LLM step fails or exceeds latency budget:  
-- Log: reason + switch (“fallback to cache”).  
-- Keep UI responsive; never crash app.  
-- Regenerate only the failed section, not the whole page.
+The application implements graceful degradation:
+
+1. **Content Retrieval Fallback**:
+   - Primary: Live scraping (HackerNews) or search (Tavily)
+   - Secondary: Static samples from `data/static_samples.json`
+   - Agent logs the fallback reason
+
+2. **Agent Error Handling**:
+   - Try-except blocks around agent execution
+   - Status messages displayed to user
+   - Errors logged to Agent Thinking Log
+
+3. **API Key Validation**:
+   - Tavily search only added if `TAVILY_API_KEY` is available
+   - Agent works with or without Tavily (graceful degradation)
+
+4. **UI Resilience**:
+   - Keep UI responsive; never crash app
+   - Clear error messages when issues occur
+   - Regenerate button always available
