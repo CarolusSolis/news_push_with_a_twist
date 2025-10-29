@@ -1,0 +1,68 @@
+{
+  "priority": ["hackernews", "reddit", "tavily", "wikipedia"],
+  "sources": {
+    "hackernews": {
+      "enabled": true,
+      "categories": ["tech", "startup", "ai"],
+      "description": "Hacker News - Tech and startup news from the community",
+      "rate_limit_per_minute": 60,
+      "requires_api_key": false
+    },
+    "reddit": {
+      "enabled": true,
+      "categories": ["tech", "science", "fun", "news", "startup"],
+      "description": "Reddit - Community-driven news and discussions",
+      "rate_limit_per_minute": 60,
+      "requires_api_key": false,
+      "subreddits": {
+        "tech": ["technology", "programming", "artificial"],
+        "science": ["science", "askscience", "space"],
+        "fun": ["todayilearned", "explainlikeimfive", "Damnthatsinteresting"],
+        "news": ["worldnews", "news"],
+        "startup": ["startups", "entrepreneur"]
+      }
+    },
+    "wikipedia": {
+      "enabled": true,
+      "categories": ["news", "history", "fun", "events"],
+      "description": "Wikipedia - Current events and historical facts",
+      "rate_limit_per_minute": 200,
+      "requires_api_key": false
+    },
+    "tavily": {
+      "enabled": true,
+      "categories": ["tech", "science", "news", "fun", "ai"],
+      "description": "Tavily - AI-powered intelligent web search",
+      "rate_limit_per_minute": 60,
+      "requires_api_key": true,
+      "api_key_env": "TAVILY_API_KEY"
+    }
+  },
+  "category_preferences": {
+    "tech": {
+      "preferred_sources": ["hackernews", "reddit", "tavily"],
+      "max_items_per_source": 3
+    },
+    "science": {
+      "preferred_sources": ["reddit", "tavily", "wikipedia"],
+      "max_items_per_source": 3
+    },
+    "news": {
+      "preferred_sources": ["tavily", "reddit", "wikipedia"],
+      "max_items_per_source": 3
+    },
+    "fun": {
+      "preferred_sources": ["reddit", "wikipedia", "tavily"],
+      "max_items_per_source": 2
+    },
+    "history": {
+      "preferred_sources": ["wikipedia"],
+      "max_items_per_source": 5
+    }
+  },
+  "fallback_strategy": {
+    "enabled": true,
+    "use_static_samples": true,
+    "static_samples_path": "app/data/static_samples.json"
+  }
+}

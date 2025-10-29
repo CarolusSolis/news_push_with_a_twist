@@ -9,6 +9,9 @@ requests>=2.31.0
 openai>=1.0.0
 langchain-tavily>=0.1.0
 
+# Multi-source news dependencies
+praw>=7.7.0  # Python Reddit API Wrapper
+
 # Testing dependencies
 pytest>=7.4.0
 pytest-cov>=4.1.0

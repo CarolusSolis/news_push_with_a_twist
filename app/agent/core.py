@@ -25,9 +25,12 @@ from typing import List as TypingList
 # Import tools
 from .tools import (
     analyze_user_preferences,
-    process_content_item, 
+    process_content_item,
     fetch_content_by_type,
-    scrape_hacker_news
+    scrape_hacker_news,
+    fetch_news,
+    get_available_sources,
+    search_news
 )
 
 logger = logging.getLogger(__name__)
@@ -97,11 +100,16 @@ def create_real_digest_agent() -> Optional[Any]:
     
     # Define the tools the real agent can use (LIVE DATA ONLY)
     tools = [
-        scrape_hacker_news,  # Hacker News for tech/AI content
+        scrape_hacker_news,  # Legacy: Direct Hacker News scraping
+        fetch_news,  # NEW: Multi-source news fetching with automatic fallback
+        get_available_sources,  # NEW: Check which news sources are available
+        search_news,  # NEW: Custom search queries via Tavily
         DigestResponse  # Add the structured output schema as a tool
     ]
-    
-    # Add Tavily search if API key is available
+
+    agent_logger.log(f"[Real Agent] Loaded {len(tools)} tools for agent")
+
+    # Add legacy Tavily search if API key is available (for backward compatibility)
     tavily_api_key = os.getenv('TAVILY_API_KEY')
     if tavily_api_key:
         tavily_search_tool = TavilySearch(
@@ -109,9 +117,9 @@ def create_real_digest_agent() -> Optional[Any]:
             topic="general",
         )
         tools.append(tavily_search_tool)
-        agent_logger.log("[Real Agent] Tavily search tool added")
+        agent_logger.log("[Real Agent] Legacy Tavily search tool added")
     else:
-        agent_logger.log("[Real Agent] No TAVILY_API_KEY found - Tavily search not available")
+        agent_logger.log("[Real Agent] No TAVILY_API_KEY found - Tavily-based tools will not be available")
     
     try:
         # First bind tools, then apply structured output (as per documentation)
@@ -120,9 +128,15 @@ def create_real_digest_agent() -> Optional[Any]:
         system_prompt = """You are the Real Agentic Morning Digest Planner. Your job is to:
 
 1. Use ONLY live data sources - no mock or cached data
-2. Fetch real content using available tools:
-   - scrape_hacker_news: For tech/AI headlines and news
-   - tavily_search: For specific, interesting content (NOT general encyclopedia entries)
+2. Fetch real content using the NEW multi-source system:
+   - fetch_news(category, source, max_items): Primary tool for fetching news from multiple sources
+     * Categories: 'tech', 'science', 'news', 'fun', 'history', 'startup', 'ai'
+     * Sources: 'hackernews', 'reddit', 'wikipedia', 'tavily' (auto-selected if not specified)
+     * Example: fetch_news('tech', max_items=5) - Auto-selects best source
+     * Example: fetch_news('science', source='reddit', max_items=3) - Specific source
+   - get_available_sources(): Check which sources are currently available
+   - search_news(query, max_items): Custom search for specific topics
+   - scrape_hacker_news: (Legacy) Direct HackerNews scraping
 3. Create a personalized digest based on user preferences
 4. Mix tech/AI content with specific fun facts, current events, and historical content
 5. Process and format the content for presentation
@@ -141,20 +155,27 @@ CONTENT STRUCTURE:
 - Generate sensible, informative descriptions for each headline
 - Make descriptions engaging and informative, explaining the significance and implications
 
-TAVILY SEARCH GUIDELINES:
-- Be CREATIVE and RANDOM with search queries - avoid predictable topics
-- Search for 2-3 COMPLETELY DIFFERENT, diverse topics to get variety
-- Make MULTIPLE separate Tavily searches with totally different random topics
-- Good examples: "medieval siege warfare techniques", "strange animal mating rituals", "forgotten inventions from the 1800s", "weird weather phenomena", "ancient Roman street food", "bizarre scientific experiments"
-- Bad examples: "space exploration", "history", "science facts", "current events" (too generic)
+MULTI-SOURCE USAGE STRATEGY:
+- Start by calling get_available_sources() to see what's available
+- Use fetch_news for standard categories (tech, science, news, fun, history)
+- Use search_news for specific, creative queries:
+  * Good examples: "medieval siege warfare techniques", "strange animal mating rituals",
+    "forgotten inventions from the 1800s", "weird weather phenomena", "ancient Roman street food"
+  * Bad examples: "space exploration", "history", "science facts" (too generic)
+- Make MULTIPLE search_news calls with COMPLETELY DIFFERENT topics for variety
 - Think like a curious person browsing Wikipedia rabbit holes
-- Mix topics: historical + scientific + cultural + weird facts
-- Search for obscure, niche, or surprising information that people don't know
+- Mix sources: HackerNews for tech → Reddit for fun → Wikipedia for history → Tavily for surprises
 
-IMPORTANT: 
-- Only use live data. If a data source fails, log the error but do not fall back to mock data.
+CONTENT DIVERSITY:
+- Use fetch_news('tech') or fetch_news('tech', source='hackernews') for need-to-know tech
+- Use fetch_news('fun', source='reddit') for interesting community discussions
+- Use fetch_news('history', source='wikipedia') for "On this day" events
+- Use search_news with creative queries for nice-to-know surprises
+
+IMPORTANT:
+- Only use live data. If a data source fails, the system will automatically try fallback sources.
 - Be comprehensive and create a rich, balanced experience with real, current information.
-- Use Tavily search with MULTIPLE CREATIVE, DIVERSE queries to find surprising, niche content to balance the digest.
+- Use multiple sources and diverse queries to find surprising, niche content.
 - ALWAYS call the DigestResponse tool at the end to return your structured digest with exactly 10 sections."""
         
         agent = create_react_agent(

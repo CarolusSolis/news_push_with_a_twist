@@ -19,8 +19,16 @@ agent/
 ├── CLAUDE.md         # This file - agent architecture
 ├── __init__.py       # Exports: generate_digest_with_agent, get_agent_logs
 ├── core.py           # Agent orchestration, system prompt, Pydantic models
+├── sources/          # Multi-source news system (see sources/CLAUDE.md)
+│   ├── base.py              # NewsSource abstract class
+│   ├── manager.py           # NewsSourceManager orchestration
+│   ├── hackernews_source.py # HackerNews implementation
+│   ├── reddit_source.py     # Reddit (PRAW) implementation
+│   ├── wikipedia_source.py  # Wikipedia API implementation
+│   └── tavily_source.py     # Tavily search implementation
 └── tools/            # Agent tools
     ├── __init__.py
+    ├── news_tools.py        # NEW: Multi-source news tools
     ├── hacker_news.py       # HackerNews scraper
     ├── retrieval_tools.py   # Content retrieval
     └── content_tools.py     # LLM-based processing
@@ -70,11 +78,14 @@ The agent's behavior is defined by a comprehensive system prompt:
    - `fun_spark`: Playful what-ifs (nice)
    - `quote`: Inspirational quotes (nice)
 3. **Tool Usage Rules**:
-   - Always call `analyze_user_preferences` first
-   - Use `scrape_hacker_news` for tech news
-   - Use `tavily_search` for specific, interesting content (NOT general encyclopedia)
-   - Use `fetch_content_by_type` as fallback
-   - Use `process_content_item` for summaries
+   - **NEW Multi-Source System**:
+     - Use `fetch_news(category, source, max_items)` as primary news tool
+     - Use `get_available_sources()` to check what's available
+     - Use `search_news(query, max_items)` for custom searches
+   - **Legacy Tools** (still available):
+     - Use `scrape_hacker_news` for direct HackerNews access
+     - Use `fetch_content_by_type` as fallback
+     - Use `process_content_item` for summaries
 4. **Content Rules**:
    - Interleave pattern: need → nice → need (3-4 sections max)
    - One-sentence summaries (≤25 words)
@@ -84,32 +95,80 @@ The agent's behavior is defined by a comprehensive system prompt:
 
 ## Available Tools
 
-### 1. analyze_user_preferences (content_tools.py)
+### NEW: Multi-Source News Tools
+
+### 1. fetch_news (news_tools.py) ⭐ PRIMARY TOOL
+**Purpose**: Fetch news from multiple sources with automatic fallback
+**Input**:
+```python
+{
+    "category": str,      # 'tech', 'science', 'news', 'fun', 'history', 'startup', 'ai'
+    "source": str,        # Optional: 'hackernews', 'reddit', 'wikipedia', 'tavily'
+    "max_items": int      # Default: 5
+}
+```
+**Output**: Dict with items list, source_used, category, count
+**When to use**: Primary tool for fetching ANY news content
+**Examples**:
+- `fetch_news('tech', max_items=10)` - Auto-select best source
+- `fetch_news('science', source='reddit', max_items=5)` - Specific source
+- `fetch_news('fun', source='reddit', max_items=3)` - Fun facts from Reddit
+
+**Available Sources**:
+- **hackernews**: Tech/AI/startup news (no API key needed)
+- **reddit**: Community discussions, diverse topics (no API key needed)
+- **wikipedia**: Current events, "On this day" history (no API key needed)
+- **tavily**: AI-powered search (requires TAVILY_API_KEY)
+
+### 2. get_available_sources (news_tools.py)
+**Purpose**: Check which news sources are currently available
+**Input**: `{}`
+**Output**: Dict with available_sources list, total_sources count, sources_info
+**When to use**: At start of digest generation to know what sources you can use
+**Example**:
+```python
+result = get_available_sources()
+# Returns: {'available_sources': ['hackernews', 'reddit', 'wikipedia'], ...}
+```
+
+### 3. search_news (news_tools.py)
+**Purpose**: Custom search queries using Tavily AI search
+**Input**:
+```python
+{
+    "query": str,         # Custom search query
+    "max_items": int      # Default: 5
+}
+```
+**Output**: Dict with items list, query, count
+**When to use**: For specific, creative topics not covered by categories
+**Note**: Requires `TAVILY_API_KEY` environment variable
+**Examples**:
+- `search_news("quantum computing breakthroughs", max_items=3)`
+- `search_news("medieval siege warfare techniques", max_items=2)`
+- `search_news("strange animal mating rituals", max_items=2)`
+
+### Legacy Tools (Still Available)
+
+### 4. analyze_user_preferences (content_tools.py)
 **Purpose**: Parse user preferences into actionable strategy
 **Input**: `{"preferences": {...}}`
 **Output**: Strategy dict with max_items, include_tech, include_quotes, etc.
 **When to use**: ALWAYS call this first
 
-### 2. scrape_hacker_news (hacker_news.py)
-**Purpose**: Get latest HackerNews headlines
+### 5. scrape_hacker_news (hacker_news.py)
+**Purpose**: Direct HackerNews scraping (legacy, use fetch_news instead)
 **Input**: `{"max_items": int}`
 **Output**: List of HN items with title, url, points, comments
-**When to use**: For tech/AI/startup news
+**When to use**: For tech/AI/startup news (prefer fetch_news)
 
-### 3. tavily_search (LangChain Tavily, core.py)
-**Purpose**: Intelligent web search for specific content
-**Input**: Search query string
-**Output**: Relevant search results
-**When to use**: For specific, interesting content (NOT general encyclop edia)
-**Note**: Only available if `TAVILY_API_KEY` is set
-
-### 4. fetch_content_by_type (retrieval_tools.py)
+### 6. fetch_content_by_type (retrieval_tools.py)
 **Purpose**: Retrieve content from static samples (fallback)
 **Input**: `{"content_type": "hacker_news"|"quotes"|"wikipedia"}`
 **Output**: Static sample data
 **When to use**: Fallback when live data unavailable
 
-### 5. process_content_item (content_tools.py)
+### 7. process_content_item (content_tools.py)
 **Purpose**: LLM-based content processing and summarization
 **Input**: `{"item": {...}, "item_type": "serious"|"fun"}`
 **Output**: Processed item with text, url, kind

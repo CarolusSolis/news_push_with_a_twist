@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `/CLAUDE.md` (this file): High-level architecture, mission, environment setup
 - `/tests/CLAUDE.md`: Testing philosophy, running tests, test structure
 - `/app/agent/CLAUDE.md`: Agent architecture, tools, system prompts
+- `/app/agent/sources/CLAUDE.md`: Multi-source news system, source development
 - `/app/voiceover/CLAUDE.md`: Voiceover generation, TTS, script logic
 
 **When making changes:**
@@ -53,10 +54,26 @@ Reference documentation in `/tutorials/langgraph-docs/`:
 - **Memory Integration:** How-to guides for session and persistent memory
 - **Human-in-the-loop:** Patterns for interactive agent workflows
 
-## 3) Sources
-- **Hacker News** (front page) → "Quick Hits" tech/AI headlines (via custom scraper)
-- **Tavily Search** → Intelligent web search for specific, interesting content
-- **Static samples** → Fallback content in `data/static_samples.json`
+## 3) Sources (Multi-Source System)
+
+The application uses a **pluggable multi-source architecture** with automatic fallback:
+
+### Primary Sources
+- **HackerNews** → Tech/AI/startup news (BeautifulSoup scraper, no API key needed)
+- **Reddit** → Community discussions via PRAW (tech, science, fun categories, no API key needed)
+- **Wikipedia** → Current events + "On this day" historical facts (Wikimedia API, no API key needed)
+- **Tavily** → AI-powered intelligent search (requires TAVILY_API_KEY)
+
+### Fallback Strategy
+- Sources are tried in priority order (configurable in `app/config/sources.json`)
+- Automatic fallback to next source if one fails
+- Static samples in `data/static_samples.json` as final fallback
+
+### Source Manager
+- Located in `app/agent/sources/manager.py`
+- Auto-discovers available sources (checks API keys, dependencies)
+- Provides unified `NewsItem` format across all sources
+- See `/app/agent/sources/CLAUDE.md` for source development guide
 
 ## 4) Architecture & Code Structure
 
@@ -69,10 +86,19 @@ The application uses a **LangGraph ReAct agent** architecture:
 ### Module Responsibilities
 - **app/app.py**: Streamlit UI, session state management, voiceover integration
 - **app/agent/core.py**: LangGraph ReAct agent orchestration, tool coordination, structured output generation
-- **app/agent/tools/**: Agent tools (retrieval, content processing, HackerNews scraping, user preference analysis)
+- **app/agent/sources/**: Multi-source news system (see `/app/agent/sources/CLAUDE.md`)
+  - **base.py**: `NewsSource` abstract class + `NewsItem` dataclass
+  - **manager.py**: `NewsSourceManager` orchestration with automatic fallback
+  - **hackernews_source.py**: HackerNews implementation
+  - **reddit_source.py**: Reddit (PRAW) implementation
+  - **wikipedia_source.py**: Wikipedia API implementation
+  - **tavily_source.py**: Tavily search implementation
+- **app/agent/tools/**: Agent tools (retrieval, content processing, news fetching)
+  - **news_tools.py**: Multi-source news tools (`fetch_news`, `search_news`, `get_available_sources`)
   - **hacker_news.py**: HackerNews scraper with BeautifulSoup
   - **retrieval_tools.py**: `fetch_content_by_type` tool for content retrieval
   - **content_tools.py**: `process_content_item` for LLM-based content processing
+- **app/config/sources.json**: Multi-source configuration (priority, settings)
 - **app/presenter.py**: Pure rendering helpers (no business logic)
 - **app/prefs.py**: User preference collection UI and state management
 - **app/voiceover/**: Audio digest generation
@@ -160,18 +186,24 @@ Backend and frontend are fully tested with pytest. See `/tests/CLAUDE.md` for:
 1. **Streamlit UI**: Clean separation between UI (`app.py`) and business logic (`services.py`)
 2. **Backend Services**: `DigestService` and `VoiceoverService` for testable business logic
 3. **LangGraph Agent**: ReAct agent with autonomous tool orchestration (see `/app/agent/CLAUDE.md`)
-4. **Agent Tools**: HackerNews scraping, Tavily search, content processing, user preference analysis
-5. **Voiceover System**: TTS script generation + OpenAI audio (see `/app/voiceover/CLAUDE.md`)
-6. **Testing Suite**: 37+ unit and integration tests with pytest (see `/tests/CLAUDE.md`)
-7. **Structured Output**: Pydantic models with automatic validation
+4. **Multi-Source News System**: Pluggable architecture with 4 sources (see `/app/agent/sources/CLAUDE.md`)
+   - HackerNews, Reddit, Wikipedia, Tavily
+   - Automatic fallback and priority-based source selection
+   - Unified NewsItem format across all sources
+5. **Agent Tools**: Multi-source fetching, HackerNews scraping, Tavily search, content processing
+6. **Voiceover System**: TTS script generation + OpenAI audio (see `/app/voiceover/CLAUDE.md`)
+7. **Testing Suite**: 57+ unit and integration tests with pytest (see `/tests/CLAUDE.md`)
+8. **Structured Output**: Pydantic models with automatic validation
 
 **🔄 Current Features:**
 - Personalized digest generation based on user preferences
 - Autonomous agent decision-making via LangGraph
-- Real-time HackerNews scraping + Tavily search
+- **Multi-source news aggregation** (HackerNews, Reddit, Wikipedia, Tavily)
+- **Automatic fallback** when sources are unavailable
+- Real-time content scraping and AI-powered search
 - Audio digest generation with voiceover
 - Agent thinking log for transparency
-- Comprehensive test coverage
+- Comprehensive test coverage (90%+ on sources)
 
 ## 10) Failure & Fallback Policy
 The application implements graceful degradation:
