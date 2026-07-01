@@ -74,6 +74,60 @@ class TestSidebarPreferences:
         assert len(at.sidebar) > 0
 
 
+class TestProfileIntegration:
+    """Test profile system integration."""
+
+    def test_profile_manager_initialized(self):
+        """Test ProfileManager is initialized in session state."""
+        at = AppTest.from_file("../app/app.py")
+        at.run()
+
+        assert 'profile_manager' in at.session_state
+
+    def test_profile_manager_has_default_profile(self):
+        """Test that default profile exists."""
+        at = AppTest.from_file("../app/app.py")
+        at.run()
+
+        manager = at.session_state.profile_manager
+        assert manager.profile_exists("default")
+
+    def test_preferences_loaded_from_profile(self):
+        """Test preferences are loaded from active profile."""
+        at = AppTest.from_file("../app/app.py")
+        at.run()
+
+        # Get ProfileManager from session state
+        manager = at.session_state.profile_manager
+        active = manager.get_active_profile()
+
+        # Should have default preferences
+        assert active.preferences.mood == "balanced"
+        assert active.preferences.time_budget == "quick"
+
+    @patch('services.DigestService.generate_digest')
+    def test_profile_marked_used_after_generation(self, mock_generate):
+        """Test profile use_count increments after digest generation."""
+        mock_sections = [{'id': 'test', 'title': 'Test', 'kind': 'need', 'items': []}]
+        mock_logs = ['[Agent] Test']
+        mock_generate.return_value = (mock_sections, mock_logs)
+
+        at = AppTest.from_file("../app/app.py")
+        at.run()
+
+        manager = at.session_state.profile_manager
+        initial_count = manager.get_active_profile().metadata.use_count
+
+        # Generate digest
+        buttons = [b for b in at.button if '🤖' in str(b)]
+        if buttons:
+            buttons[0].click().run()
+
+        # Use count should increment
+        final_count = manager.get_active_profile().metadata.use_count
+        assert final_count > initial_count
+
+
 class TestDigestGeneration:
     """Test digest generation workflow."""
 

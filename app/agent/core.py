@@ -235,12 +235,15 @@ def generate_digest_with_real_agent(preferences: Dict[str, Any]) -> List[Dict[st
     
     try:
         # Use the real agent to generate the digest with live data only
-        result = agent.invoke({
-            "messages": [{
-                "role": "user", 
-                "content": f"Create a personalized morning digest using ONLY live data sources. User preferences: {json.dumps(preferences, indent=2)}. Focus on tech/AI content from Hacker News."
-            }]
-        })
+        result = agent.invoke(
+            {
+                "messages": [{
+                    "role": "user",
+                    "content": f"Create a personalized morning digest using ONLY live data sources. User preferences: {json.dumps(preferences, indent=2)}. Focus on tech/AI content from Hacker News."
+                }]
+            },
+            config={"recursion_limit": 50}  # Increase limit for multiple tool calls
+        )
         
         agent_logger.log("[Real Agent] Real agent completed successfully")
         

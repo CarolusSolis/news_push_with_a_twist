@@ -58,6 +58,10 @@ def generate_digest(prefs: Dict[str, Any]) -> None:
         st.session_state.digest_sections = sections
         st.session_state.agent_log = agent_logs
 
+        # Mark profile as used
+        if 'profile_manager' in st.session_state:
+            st.session_state.profile_manager.mark_active_profile_used()
+
         show_generation_status('complete')
         st.session_state.generation_status = 'complete'
 

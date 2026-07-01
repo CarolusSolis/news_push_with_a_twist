@@ -1,0 +1,8 @@
+# Ignore all profile files (user data)
+*.json
+*.bak
+*.tmp
+
+# But track this .gitignore and README
+!.gitignore
+!README.md
